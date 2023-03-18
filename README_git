@@ -1,0 +1,16 @@
+git init 
+git status
+ssh-keygen -t rsa -b 4096 -C "wojtek.szewczuk@gmail.com"
+cat /home/kajtek/.ssh/id_rsa.pub
+git add .
+git commit -m "Initial commit"
+
+git config --global user.email "wojtek.szewczuk@gmail.com"
+
+git clone git@github.com:kajtek20/LS.git
+git remote set-url origin git@github.com:kajtek20/LS.git
+
+ssh -T git@github.com //test
+
+git branch -M main
+git push -u origin main

@@ -1,0 +1,8 @@
+Compilation -> use make and attached Makefile
+
+
+LS computation -> to calculate Lomb-Scargle periodogram (amplitude periodogram) define fast_LS_periodogram type object
+and call its member function
+calculate_LS(const vector<double> & t, const vector<double> & y, const int npts , const double over=4 , const double hifac=1, bool save_trf=true)
+where t is vector of time points, y vector of fluxes, npts number of observational data point, over oversampling factor, hifac specify maximum frequency
+in terms of Nyquist frequency and save_trf specify if periodograms are writen into files.
