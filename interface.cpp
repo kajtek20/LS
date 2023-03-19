@@ -103,7 +103,7 @@ void interface::read_config()
             i--;
         }
     }
-    
+    /////test       
     
     
     cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
@@ -113,6 +113,7 @@ void interface::read_config()
     //config_parameters_double dq;
     //config_parameters_double dw;
     //par_v.push_back(dq);
+    //niedziela
 }
 
 
