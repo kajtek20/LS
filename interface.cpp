@@ -2,6 +2,16 @@
 
 using namespace std;
 
+
+bool string_to_bool(std::string str) {
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+    std::istringstream is(str);
+    bool b;
+    is >> std::boolalpha >> b;
+    return b;
+}
+
+
 interface::interface(int _narguments, char* argv[]): narguments(_narguments)
 {
     cout<<"#####################################"<<endl;
@@ -22,39 +32,26 @@ interface::interface(int _narguments, char* argv[]): narguments(_narguments)
     }
     
     
-    
     for(int i=0; i<narguments; i++)
     {
         if(call_parameters[i]=="-f")
         {
-            //datafile=call_parameters[i+1];
             cp.insert(std::pair{"data_file", call_parameters[i+1]});
         }
         
         if(call_parameters[i]=="-c")
         {
-            //configfile=call_parameters[i+1];
             cp.insert(std::pair{"config_file", call_parameters[i+1]});
         }
     }
     cp.insert(std::pair{"config_file", "Config"}); //will add the key only if it has not been added before from command line
+    make_default_cp();
     
     
 
     read_config();
 
-
-    cp.insert(std::pair{"mass", "%%%%"});
-    map<string,string>::iterator iter = cp.find("mass") ;
-    if( iter != cp.end() )
-    cp.erase( iter );
-    cp.insert(std::pair{"mass", "#####"});
-
-
-
-    cout<<"------------------ "<<cp["mass"]<<" "<<cp.count("mass0")<<endl;
-    cout<<"------------------ "<<cp["data_file"]<<" "<<cp.count("mass0")<<endl;
-    cout<<"------------------ "<<cp["config_file"]<<" "<<cp.count("mass0")<<endl;
+    
     
     cout<<"#####################################";
     cout<<endl<<endl<<endl;
@@ -66,7 +63,8 @@ void interface::read_config()
 {
     ifstream in(cp["config_file"]);
     string line;
-    //int config_size;
+    string mapkey, mapvalue;
+    map<string,string>::iterator mapiter;
     
     if(in.good())
     {
@@ -85,8 +83,6 @@ void interface::read_config()
     }
     in.close();
     
-    for(std::vector<std::__cxx11::basic_string<char> >::size_type i=0; i<config_content.size(); i++)
-        cout<<config_content[i].size()<<" "<<config_content[i]<<endl;
     
     std::string::size_type n;
     for(std::vector<std::__cxx11::basic_string<char> >::size_type i=0; i<config_content.size(); i++) 
@@ -103,18 +99,44 @@ void interface::read_config()
             i--;
         }
     }
-    /////test       
     
     
-    cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
-    for(std::vector<std::__cxx11::basic_string<char> >::size_type i=0; i<config_content.size(); i++)
-        cout<<config_content[i].size()<<" "<<config_content[i]<<endl;
+    
+    
+    for(std::vector<std::__cxx11::basic_string<char> >::size_type i=0; i<config_content.size(); i++) 
+    {
+        n = config_content[i].find("=");
+        mapkey = config_content[i].substr(0, n);
+        mapvalue = config_content[i].substr(n+1, config_content[i].back());
+        mapiter = cp.find(mapkey);
+        if( mapiter != cp.end() )
+            cp.erase( mapiter );  //overwrite previous entries
+        cp.insert(std::pair{mapkey,mapvalue});
+    }
 
-    //config_parameters_double dq;
-    //config_parameters_double dw;
-    //par_v.push_back(dq);
-    //niedziela
+    
+    cout<<"++++++++++++++++++++++++++++"<<endl;
+    for (const auto& p : cp) {
+        cout << "(" << p.first << ", " << p.second << ") "<<endl;
+    }
+    cout<<"++++++++++++++++++++++++++++"<<endl;
+    
+    
 }
 
 
 
+void interface::make_default_cp()
+{
+    cp.insert(std::pair{"freq_file", "freq.dat"});
+    cp.insert(std::pair{"save_spectra", "true"});
+    cp.insert(std::pair{"noise_in_window", "true"});
+    cp.insert(std::pair{"window_size", "1"});
+    cp.insert(std::pair{"StoN_criterion", "5"});
+    cp.insert(std::pair{"fit_all_freq", "true"});
+    cp.insert(std::pair{"fit_n_last_freq", "1"});
+    
+    cp.insert(std::pair{"spec_mode_default", "true"});
+    cp.insert(std::pair{"spec_res", "0.0001"});
+    cp.insert(std::pair{"spec_high_freq", "25"});
+}

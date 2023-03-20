@@ -1,5 +1,4 @@
 CC = g++
-#CFLAGS = -fopenmp -Wall -O2 -finline-functions   -lnfft3 -lfftw3 -lm -lc -march=native
 CFLAGS =   -std=c++1z -Wall -O2 -finline-functions   -lnfft3_threads -lfftw3_threads -lfftw3 -lm -lc -march=native
 CFLAGS2 =  -std=c++1z -Wall -O3 -finline-functions    -lm -lc -march=native
 
@@ -9,7 +8,7 @@ CFLAGS2 =  -std=c++1z -Wall -O3 -finline-functions    -lm -lc -march=native
 
 
 main: main.o fast_LS.o fit.o interface.o
-	$(CC)  -o LS main.o fast_LS.o fit.o interface.o $(CFLAGS)
+	$(CC)  -o LS_and_fit main.o fast_LS.o fit.o interface.o $(CFLAGS)
 
 # The main.o target can be written more simply
 
@@ -30,4 +29,4 @@ interface.o: interface.cpp interface.h
 
 .PHONY : clean
 clean :
-	-rm *.o LS
+	-rm *.o LS_and_fit

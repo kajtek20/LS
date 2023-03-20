@@ -183,7 +183,8 @@ void fast_LS_periodogram::reduce(const vector<long double> & t, const int npts, 
 }
 
 
-void fast_LS_periodogram::nfft ( const vector<long double> & t, const vector<long double> & y, int n, int m, vector< complex<long double> > &d, bool window_spectrum)
+void fast_LS_periodogram::nfft ( const vector<long double> & t, const vector<long double> & y, int n, int m,\
+                                 vector< complex<long double> > &d, bool window_spectrum)
 {
     fftw_init_threads();
     
@@ -226,31 +227,35 @@ void fast_LS_periodogram::nfft ( const vector<long double> & t, const vector<lon
 }
 
 
-void fast_LS_periodogram::calculate_LS(const vector<long double> & t, const vector<long double> & y, const int npts , const long double over , const long double hifac, bool save_trf)
+void fast_LS_periodogram::calculate_LS(const vector<long double> & t, const vector<long double> & y, const int npts ,\
+                                       const long double over , const long double hifac, bool save_trf,\
+                                       const bool spec_mode_default, const long double spec_max_freq, const long double spec_resol)
 {
-    long double df = 1.0 / ( over * (t[npts - 1] - t[0]));
+    long double df = 1.0l / ( over * (t[npts - 1] - t[0]));
     // Index of the highest frequency in the positive frequency part of spectrum .
-    int m = floor (0.5 * npts * over * hifac );
+    int m = floor (0.5l * npts * over * hifac );
+    long double oversampling = over;
+    
+    if(spec_mode_default == false)
+    {
+        df = spec_resol;
+        oversampling = 1.0l / ( df * (t[npts - 1] - t[0]));
+        m = floor (spec_max_freq /spec_resol );
+    }
 	
 	// Centers the data.
 	centerData(npts, y);
 	// Reduces the times to [-1/2, 1/2).
-    reduce(t, npts, over);
+    reduce(t, npts, oversampling);
 	
 	freqs.resize(m);
     Pn.resize(m);
     nfreqs = m;
     
-    
-    //time_t start, koniec;
-    //time( & start );
     // Unnormalised FTs of the data and window .
-    //vector<complex<long double> > sp ;
 	sp.resize(m+1);
     nfft(t_reduced, y_centered, npts , m, sp, false);
     
-    
-    //vector<complex<long double> > win;
     if(calculate_nfft_win)
     {
         calculate_nfft_win=false;
@@ -258,9 +263,7 @@ void fast_LS_periodogram::calculate_LS(const vector<long double> & t, const vect
 	    vector<long double> empty_vector;
         nfft (t_reduced, empty_vector , npts , 2 * m, win, true);
     }
-    //time( & koniec );      
-    //cout<<"CZAS nfft  "<<difftime( koniec, start )<<endl;
-
+    
 
     complex<long double>  z1, z2;
     long double absz2, hc2wt, hs2wt, cwt, swt, den, cterm, sterm;

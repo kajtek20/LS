@@ -62,7 +62,8 @@ public:
     npts the length of the times -series .     over the oversampling factor .
     hifac the highest frequency in units of " average " Nyquist frequency .
     This function returns the results in a structure , LS ( see text ).    */
-    void calculate_LS(const vector<long double> & t, const vector<long double> & y, const int npts , const long double over=4 , const long double hifac=1, bool save_trf=true);
+    void calculate_LS(const vector<long double> & t, const vector<long double> & y, const int npts , const long double over=4 , const long double hifac=1,\
+                      bool save_trf=true, const bool spec_mode_default=true, const long double spec_max_freq=25, const long double spec_resol=1e-4);
     void find_nu_max_amp(long double StoNlimit=4, bool noise_in_window=true, long double window_size=1);
     fast_LS_periodogram();
     

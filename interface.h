@@ -34,11 +34,14 @@ public:
     
 private:
     void read_config();
+    void make_default_cp();
     vector<string> config_content;
 };
 
 
 
+
+bool string_to_bool(std::string str);
 
 
 #endif
