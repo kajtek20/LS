@@ -1,0 +1,33 @@
+// characters starts a comment
+
+data_file    =   mySAP_H_KIC78264293_lsq_bv12345_4clip_det.txt// file with data; first column time, second flux, third flux_error ... It has to contain at lest first two columns
+
+
+
+
+
+//output 
+freq_file = freq11.dat // output file with found frequencies, amplitudes etc.
+save_spectra = true  // save spectra to files - true or no false
+
+
+
+
+//spectra settings
+spec_mode_default = false //calculate with "proper" resolution up to ~Nyquist frequency
+spec_res = 0.0001 // resolution of the calculated spectrum, only relevant if spec_mode_default =false
+spec_high_freq = 25 //maximum frequency, only relevant if spec_mode_default =false
+
+
+
+
+// noise parameters
+noise_in_window = true // if true - noise is calculated within given window, if false noise is calculated from the whole spectrum
+window_size = 1
+StoN_criterion = 5 // only frequency peaks higher than StoN_criterion times noise are accepted
+
+
+
+//fitting parameters
+fit_all_freq = true // if false only last n values of found  frequencies are fitted (by default 1)
+fit_n_last_freq = 3 // relevant if fit_all_freq = false
