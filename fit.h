@@ -1,13 +1,16 @@
 #include<iostream>
 #include<cmath>
 #include<vector>
-
+#include <omp.h>
+#include <algorithm>
+//#include <tbb/parallel_for.h>
+//#include <tbb/parallel_reduce.h>
 
 
 using namespace std;
 
 
-
+void add_matrix(vector<vector<long double> > & m1, vector<vector<long double> > & m2);
 
 class fit_sines
 {

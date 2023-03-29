@@ -15,7 +15,7 @@ bool string_to_bool(std::string str) {
 interface::interface(int _narguments, char* argv[]): narguments(_narguments)
 {
     cout<<"#####################################"<<endl;
-    cout<<"LS for Linux, version of Mar 16, 2023"<<endl;
+    cout<<"LS for Linux, version of Mar 29, 2023"<<endl;
     cout<<"by Wojtek Szewczuk"<<endl;
     cout<<"#####################################"<<endl<<endl;
     
@@ -139,4 +139,8 @@ void interface::make_default_cp()
     cp.insert(std::pair{"spec_mode_default", "true"});
     cp.insert(std::pair{"spec_res", "0.0001"});
     cp.insert(std::pair{"spec_high_freq", "25"});
+    
+    cp.insert(std::pair{"remove_too_close", "false"});
+    cp.insert(std::pair{"remove_too_close_fac", "2.5"});
+    cp.insert(std::pair{"threads", "1"});
 }

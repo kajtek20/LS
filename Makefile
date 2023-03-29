@@ -1,6 +1,6 @@
 CC = g++
-CFLAGS =   -std=c++1z -Wall -O2 -finline-functions   -lnfft3_threads -lfftw3_threads -lfftw3 -lm -lc -march=native
-CFLAGS2 =  -std=c++1z -Wall -O3 -finline-functions    -lm -lc -march=native
+CFLAGS =   -std=c++1z -Wall -O2 -finline-functions   -lnfft3_threads -lfftw3_threads -lfftw3 -lm -lc -march=native -fopenmp
+CFLAGS2 =  -std=c++1z -Wall -O3 -finline-functions    -lm -lc -march=native -fopenmp
 
 # ****************************************************
 # Targets needed to bring the executable up to date

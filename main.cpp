@@ -27,19 +27,25 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    ofstream out;
+    ofstream out, out2;
     light_curve lc;
     fast_LS_periodogram LS;
     fit_sines fs;
+    string command;
     
     interface iface(argc, argv);
 
     lc.read_data(iface.cp["data_file"]);
-    out.open(iface.cp["freq_file"]);
+    out.open(iface.cp["freq_file"]+"_history");
+    out2.open(iface.cp["freq_file"]);
     
     
     
-    time_t start, koniec;
+    setenv("OMP_NUM_THREADS", iface.cp["threads"].c_str(),1);
+    
+    time_t start, koniec, start_f, koniec_f;
+    
+    time( & start_f );
     
     lc.sine_parameters.push_back(vector<long double>(2));//vector for shift and its uncertainty
     lc.fit_control.push_back(vector<bool>(1, true));
@@ -83,17 +89,22 @@ int main(int argc, char* argv[])
             
             lc.sine_parameters[i][0]=LS.nu_max_amp;
             lc.n_sines=i;
+            
+            time( & start );
             fs.lin_fit_A_and_ph(lc.date, lc.flux, lc.weights, lc.n_sines, lc.data_points, lc.sine_parameters);
+            time( & koniec );      
+            cout<<"CZAS lin fit  "<<difftime( koniec, start )<<endl<<endl;
             
             time( & start );
             fs.Levenberg_Marquardt_fit(lc.date, lc.flux, lc.weights, lc.n_sines, lc.data_points, lc.fit_control, lc.sine_parameters);
             time( & koniec );      
             cout<<"CZAS M-L  "<<difftime( koniec, start )<<endl<<endl;
+            cout<<endl<<"Aktualny czas: "<<ctime(&koniec)<<endl;
             
             lc.prewithen_data();
             
             for(int j=1; j<=i; j++){
-            out<<fixed<<setw(4)<<j<<setw(12)<<setprecision(8)<<lc.sine_parameters[j][0]<<setw(12)<<setprecision(8)<<lc.sine_parameters[j][3];
+            out<<fixed<<setw(4)<<j<<setw(14)<<setprecision(8)<<lc.sine_parameters[j][0]<<setw(12)<<setprecision(8)<<lc.sine_parameters[j][3];
             out<<setw(12)<<setprecision(4)<<lc.sine_parameters[j][1]<<setw(12)<<setprecision(4)<<lc.sine_parameters[j][4];
             out<<setw(12)<<setprecision(4)<<lc.sine_parameters[j][2]<<setw(12)<<setprecision(4)<<lc.sine_parameters[j][5];
             out<<setw(8)<<setprecision(2)<<lc.sine_parameters[j][6]<<setw(8)<<setprecision(2)<<lc.sine_parameters[j][7]<<endl;}
@@ -102,7 +113,28 @@ int main(int argc, char* argv[])
         else
             break;
     }
-    out.close();
+    
+    if( string_to_bool(iface.cp["remove_too_close"]) )
+    {
+        ofstream out3;
+        out3.open(iface.cp["freq_file"]+"_removed");
+        lc.remove_close_freq(stod(iface.cp["remove_too_close_fac"]), out3);
+        out3.close();
+        fs.Levenberg_Marquardt_fit(lc.date, lc.flux, lc.weights, lc.n_sines, lc.data_points, lc.fit_control, lc.sine_parameters);
+    }
+    
+    for(int j=1; j<=lc.n_sines; j++){
+            out2<<fixed<<setw(4)<<j<<setw(14)<<setprecision(8)<<lc.sine_parameters[j][0]<<setw(12)<<setprecision(8)<<lc.sine_parameters[j][3];
+            out2<<setw(12)<<setprecision(4)<<lc.sine_parameters[j][1]<<setw(12)<<setprecision(4)<<lc.sine_parameters[j][4];
+            out2<<setw(12)<<setprecision(4)<<lc.sine_parameters[j][2]<<setw(12)<<setprecision(4)<<lc.sine_parameters[j][5];
+            out2<<setw(8)<<setprecision(2)<<lc.sine_parameters[j][6]<<setw(8)<<setprecision(2)<<lc.sine_parameters[j][7]<<endl;}
+
+    
+    
+    out.close(); out2.close();
+    
+    time( & koniec_f );
+    cout<<"CZAS full  "<<difftime( koniec_f, start_f )<<endl<<endl;
 }
 
 

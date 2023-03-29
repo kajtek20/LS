@@ -130,6 +130,27 @@ void light_curve::read_data(string file_name)
 
 
 
+void light_curve::remove_close_freq(long double factor, ofstream & out)
+{
+    for(int i=1; i<=n_sines; i++)
+    {
+        for(int j=i+1; j<=n_sines; j++)
+        {
+            if(fabs(sine_parameters[i][0]-sine_parameters[j][0]) <= factor * Rayleigh_resolution)
+            {
+                out<<fixed<<setw(4)<<j<<setw(14)<<setprecision(8)<<sine_parameters[j][0]<<setw(12)<<setprecision(8)<<sine_parameters[j][3];
+                out<<setw(12)<<setprecision(4)<<sine_parameters[j][1]<<setw(12)<<setprecision(4)<<sine_parameters[j][4];
+                out<<setw(12)<<setprecision(4)<<sine_parameters[j][2]<<setw(12)<<setprecision(4)<<sine_parameters[j][5];
+                out<<setw(8)<<setprecision(2)<<sine_parameters[j][6]<<setw(8)<<setprecision(2)<<sine_parameters[j][7]<<endl;
+            
+                sine_parameters.erase(sine_parameters.begin()+j);
+                fit_control.erase(fit_control.begin()+j);
+                n_sines--;
+                j--;
+            }
+        }
+    }
+}
 
 
 

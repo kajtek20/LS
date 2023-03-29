@@ -1,6 +1,6 @@
 // characters starts a comment
 
-data_file    =   mySAP_H_KIC78264293_lsq_bv12345_4clip_det.txt// file with data; first column time, second flux, third flux_error ... It has to contain at lest first two columns
+data_file    =   RV_Ari.dat // file with data; first column time, second flux, third flux_error ... It has to contain at lest first two columns
 
 
 
@@ -8,15 +8,15 @@ data_file    =   mySAP_H_KIC78264293_lsq_bv12345_4clip_det.txt// file with data;
 
 //output 
 freq_file = freq11.dat // output file with found frequencies, amplitudes etc.
-save_spectra = true  // save spectra to files - true or no false
+save_spectra = false  // save spectra to files - true or no false
 
 
 
 
 //spectra settings
 spec_mode_default = false //calculate with "proper" resolution up to ~Nyquist frequency
-spec_res = 0.0001 // resolution of the calculated spectrum, only relevant if spec_mode_default =false
-spec_high_freq = 25 //maximum frequency, only relevant if spec_mode_default =false
+spec_res = 5e-5 // resolution of the calculated spectrum, only relevant if spec_mode_default =false
+spec_high_freq = 200 //maximum frequency, only relevant if spec_mode_default =false
 
 
 
@@ -24,10 +24,22 @@ spec_high_freq = 25 //maximum frequency, only relevant if spec_mode_default =fal
 // noise parameters
 noise_in_window = true // if true - noise is calculated within given window, if false noise is calculated from the whole spectrum
 window_size = 1
-StoN_criterion = 5 // only frequency peaks higher than StoN_criterion times noise are accepted
+StoN_criterion = 7 // only frequency peaks higher than StoN_criterion times noise are accepted
 
 
 
 //fitting parameters
 fit_all_freq = true // if false only last n values of found  frequencies are fitted (by default 1)
 fit_n_last_freq = 3 // relevant if fit_all_freq = false
+
+
+
+
+//remove spurious frequencies
+remove_too_close = true  // true or false
+remove_too_close_fac =2.5  // if two frequencies are closer than rem_too_close_fac times Rayleigh resolution (and rem_too_close=true), the one with smaller amplitude is removed
+
+
+
+//parallelism 
+threads = 8 // how many cores to use (default 1)

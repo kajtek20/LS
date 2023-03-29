@@ -10,6 +10,12 @@
 using namespace std;
 
 
+void add_matrix(vector<vector<long double> > & m1, vector<vector<long double> > & m2)
+{
+    for(std::vector<std::vector<long double> >::size_type i=0; i<m1.size(); i++)
+        for(std::vector<std::vector<long double> >::size_type j=0; j<m1.size(); j++)
+            m1[i][j]+=m2[i][j];
+}
 
 
 const long double dwaPI=2*M_PI;
@@ -23,7 +29,7 @@ void fit_sines::lin_fit_A_and_ph(const vector<long double>  & date, const vector
     int parameters=n_sines*2+1;
     long double arg, X_row_j_wt;
     
-    XTWX.resize(n_datapoints, vector<long double>(parameters,0));
+    XTWX.resize(parameters, vector<long double>(parameters,0));
     XWy.resize(parameters, 0);
     beta.resize(parameters, 0);
     X_row.resize(parameters);
@@ -32,10 +38,18 @@ void fit_sines::lin_fit_A_and_ph(const vector<long double>  & date, const vector
     
     time_t start, koniec;
     time( & start );
+   
     
-    
+    //cout<<"**********::**********"<<endl;
+    #pragma omp declare reduction (add_m : vector<vector<long double> > : add_matrix(omp_out, omp_in)) initializer(omp_priv = vector<vector<long double> >(omp_orig.size(), vector<long double>(omp_orig.size())) )
+            
+    #pragma omp declare reduction(add_v : std::vector<long double> : \
+                              std::transform(omp_out.begin(), omp_out.end(), omp_in.begin(), omp_out.begin(), std::plus<long double>())) \
+                              initializer(omp_priv = decltype(omp_orig)(omp_orig.size()))
+            
+    #pragma omp parallel for reduction (add_m : XTWX) reduction (add_v : XWy) private (arg, X_row_j_wt) firstprivate (X_row)
     for(int i=0; i<n_datapoints; i++)
-    {
+    {   
         for(int l=1; l<=n_sines; l++)
         {
             
@@ -53,10 +67,6 @@ void fit_sines::lin_fit_A_and_ph(const vector<long double>  & date, const vector
             }
         }
     }
-    
-    
-    
-
   
     time( & koniec );      
     cout<<"CZAS policzenia macierzy  "<<difftime( koniec, start )<<endl;
@@ -272,7 +282,7 @@ void fit_sines::make_J_and_ymod(const int n_datapoints, const vector<long double
 {
     long double arg;
     long double sinus, cosinus;
-    int kk=0;
+    int kk=0, i, j, k;
     
     if(fit_control[0][0])
     {
@@ -281,10 +291,11 @@ void fit_sines::make_J_and_ymod(const int n_datapoints, const vector<long double
             J[i][0]=1;    //first parameter is constant offset
     }
             
-    for(int i=0; i<n_datapoints; i++)
+    #pragma omp parallel for private (i, j, k, arg, sinus, cosinus)
+    for(i=0; i<n_datapoints; i++)
     {
         ymod[i]=sine_parameters[0][0];
-        for(int j=1, k=kk; j<=n_sines; j++)
+        for(j=1, k=kk; j<=n_sines; j++)
         {
             arg=dwaPI*(sine_parameters[j][0]*t[i]+sine_parameters[j][2]);
             sinus=sin(arg);
@@ -341,8 +352,6 @@ void fit_sines::Levenberg_Marquardt_fit(const vector<long double> & t, const vec
     y_sub_ymod.resize(n_datapoints);
     
     JTWJ.resize(fitted_parameters, vector<long double>(fitted_parameters, 0));
-//    bb.resize(fitted_parameters+1, vector<long double>(fitted_parameters+1, 0));
-//    AA.resize(fitted_parameters+1, vector<long double>(fitted_parameters+1, 0));
     A.resize(fitted_parameters, vector<long double>(fitted_parameters));
     JTWy.resize(fitted_parameters, 0);
     hlm.resize(fitted_parameters);
@@ -365,32 +374,13 @@ void fit_sines::Levenberg_Marquardt_fit(const vector<long double> & t, const vec
             }
 
 
-            //cout<<"teeeeeeeest  "<<JTWJ[0][0]<<"  "<<JTWJ[1][2]<<" "<<JTWy[0]<<" "<<JTWy[1]<<endl;
-
-
             time_t start, koniec;
             time( & start );
             
             make_J_and_ymod(n_datapoints, t, n_sines, sine_parameters, fit_control, J, ymod);
             chi_p=0;
 
-/*
-           cout<<y[0]<<"  "<<ymod[0]<<endl;
-           cout<<y[1]<<"  "<<ymod[1]<<endl;
-           cout<<y[2]<<"  "<<ymod[2]<<endl;
-           cout<<y[3]<<"  "<<ymod[3]<<endl;
-           cout<<y[4]<<"  "<<ymod[4]<<endl;
-           cout<<y[5]<<"  "<<ymod[5]<<endl;
 
-            cout<<fixed<<setprecision(20)<<"J "<<J[0][0]<<" "<<J[0][1]<<" "<<J[0][2]<<" "<<endl;
-            cout<<"J "<<J[1][0]<<" "<<J[1][1]<<" "<<J[1][2]<<" "<<endl;
-            cout<<"J "<<J[2][0]<<" "<<J[2][1]<<" "<<J[2][2]<<" "<<endl;
-            cout<<"J "<<J[3][0]<<" "<<J[3][1]<<" "<<J[3][2]<<" "<<endl;
-            cout<<"J "<<J[4][0]<<" "<<J[4][1]<<" "<<J[4][2]<<" "<<endl;
-            cout<<"J "<<J[5][0]<<" "<<J[5][1]<<" "<<J[5][2]<<" "<<endl;
-            cout<<"J "<<J[6][0]<<" "<<J[6][1]<<" "<<J[6][2]<<" "<<endl;
-            cout<<"w "<<w[0]<<" "<<w[1]<<" "<<w[2]<<" "<<w[3]<<endl;
-            */
             
             /*
             for(int i=0; i<fitted_parameters; i++)
@@ -419,10 +409,13 @@ void fit_sines::Levenberg_Marquardt_fit(const vector<long double> & t, const vec
                 }
             }
             
-           */ 
+           */
+            
             
             //this version is faster
             long double dy;
+
+            /*
             for (int i=0, j, l, k, m; i<n_datapoints; i++)    //Summation loop over all data.
             {
                 //(*funcs)(x[i],a,&ymod,dyda,ma);
@@ -431,12 +424,44 @@ void fit_sines::Levenberg_Marquardt_fit(const vector<long double> & t, const vec
                  
                  for (j=-1, l=0; l<fitted_parameters; l++) 
                  {
-                     //if (ia[l]) 
                      { 
                          wt=J[i][l]*w[i];
                          for (j++, k=-1, m=0; m<=l; m++)
                          {
-                            if (1) {JTWJ[j][++k] += wt*J[i][m];  }
+                            JTWJ[j][++k] += wt*J[i][m];
+                         }
+    	                 JTWy[j] += dy*wt;
+        
+                     } 
+                }
+                chi_p += dy*dy*w[i];   //And find χ2 .
+            }
+            */
+            
+            //this version is faster
+            //export OMP_NUM_THREADS=8;
+            
+            
+            
+            int i, j, l, k, m;
+            #pragma omp declare reduction (add_m : vector<vector<long double> > : add_matrix(omp_out, omp_in)) initializer(omp_priv = vector<vector<long double> >(omp_orig.size(), vector<long double>(omp_orig.size())) )
+            
+            #pragma omp declare reduction(add_v : std::vector<long double> : \
+                              std::transform(omp_out.begin(), omp_out.end(), omp_in.begin(), omp_out.begin(), std::plus<long double>())) \
+                              initializer(omp_priv = decltype(omp_orig)(omp_orig.size()))
+            
+            #pragma omp parallel for reduction (+ : chi_p) reduction (add_m : JTWJ) reduction (add_v : JTWy) private (i, j, l, k, m, dy, wt)
+            for (i=0; i<n_datapoints; i++)    //Summation loop over all data.
+            {
+                 dy=y[i]-ymod[i];
+                 
+                 for (j=-1, l=0; l<fitted_parameters; l++) 
+                 {
+                     { 
+                         wt=J[i][l]*w[i];
+                         for (j++, k=-1, m=0; m<=l; m++)
+                         {
+                            JTWJ[j][++k] += wt*J[i][m];
                          }
     	                 JTWy[j] += dy*wt;
         
@@ -446,85 +471,32 @@ void fit_sines::Levenberg_Marquardt_fit(const vector<long double> & t, const vec
             }
             
             
+  
+             
             
             time( & koniec );      
             //cout<<"CZAS policzenia macierzy  "<<difftime( koniec, start )<<endl;
         
+            #pragma omp parallel for 
             for (int j=1;j<fitted_parameters; j++)   //Fill in the symmetric side.
                 for (int k=0; k<j; k++) JTWJ[k][j]=JTWJ[j][k];
                 
                 
         }
 
-        /*
-        cout<<fixed<<setprecision(20)<<"JTWJ "<<JTWJ[0][0]<<" "<<JTWJ[0][1]<<" "<<JTWJ[0][2]<<endl;
-        cout<<"JTWJ "<<JTWJ[1][0]<<" "<<JTWJ[1][1]<<" "<<JTWJ[1][2]<<endl;
-        cout<<"JTWJ "<<JTWJ[2][0]<<" "<<JTWJ[2][1]<<" "<<JTWJ[2][2]<<endl;
-        cout<<"JTWy "<<JTWy[0]<<" "<<JTWy[1]<<" "<<JTWy[2]<<endl;
-*/
+
         A=JTWJ;
         for(int i=0; i<fitted_parameters; i++)
             A[i][i] += lambda0 * A[i][i];
         
-        /*
-        cout<<"A[0][0] i... "<<endl;
-        cout<<JTWJ[0][0]<<" "<<JTWJ[0][1]<<" "<<JTWJ[0][2]<<endl;
-        cout<<A[0][0]<<" "<<A[0][1]<<" "<<A[0][2]<<endl;
-        
-        cout<<JTWJ[1][0]<<" "<<JTWJ[1][1]<<" "<<JTWJ[1][2]<<endl;
-        cout<<A[1][0]<<" "<<A[1][1]<<" "<<A[1][2]<<endl;
-        
-        cout<<JTWJ[2][0]<<" "<<JTWJ[2][1]<<" "<<JTWJ[2][2]<<endl;
-        cout<<A[2][0]<<" "<<A[2][1]<<" "<<A[2][2]<<endl;
-        */
-/*
-        cout<<"A "<<A[0][0]<<" "<<A[0][1]<<" "<<A[0][2]<<endl;
-        cout<<"A "<<A[1][0]<<" "<<A[1][1]<<" "<<A[1][2]<<endl;
-        cout<<"A "<<A[2][0]<<" "<<A[2][1]<<" "<<A[2][2]<<endl;
-*/
+
 
         b=JTWy;
         //gauss change A and b
         gauss(fitted_parameters, A, b, hlm);
         
-//        double tmp_hlm;
-  //      tmp_hlm=hlm[0];
-    //    hlm[0]=hlm[1];
-      //  hlm[1]=tmp_hlm;
-    
-        /*
-        AA[1][1]=A[0][0];
-        AA[1][2]=A[0][1];
-        AA[1][3]=A[0][2];
-        
-        AA[2][1]=A[1][0];
-        AA[2][2]=A[1][1];
-        AA[2][3]=A[1][2];
-        
-        AA[3][1]=A[2][0];
-        AA[3][2]=A[2][1];
-        AA[3][3]=A[2][2];
-        
-        bb[1][1]=b[0]; bb[2][1]=b[1]; bb[3][1]=b[2];
-        
-        cout<<"TUUUUU"<<endl;
-        
-       gaussj(AA, fitted_parameters, bb, 1);
-       hlm[0]=bb[1][1];
-       hlm[1]=bb[2][1];
-       hlm[2]=bb[3][1];
-       */
-/* Linear equation solution by Gauss-Jordan elimination, equation (2.1.1) above. a[1..n][1..n]
-   is the input matrix. b[1..n][1..m] is input containing the m right-hand side vvectors. On
-   output, a is replaced by its matrix inverse, and b is replaced by the corresponding set of solution
-   vvectors. */
 
 
-////////////////////////////////////////////////////////////////////
-         
-        
-         //hlm[0]=-0.000000000339l; hlm[1]=-0.000000331461l; hlm[2]=0.000832277009l;
-        //calculate chi for p+h
         long double arg_p_ad_h;
         vector<vector<long double> > sine_parameters_add_h=sine_parameters;
         chi_p_ad_h=0;
@@ -544,14 +516,9 @@ void fit_sines::Levenberg_Marquardt_fit(const vector<long double> & t, const vec
                 sine_parameters_add_h[i][2] += hlm[hindex++];
 
         }
-//        cout<<"hlm "<<iter<<" "<<fixed<<setprecision(20)<<hlm[0]<<" "<<hlm[1]<<" "<<hlm[2]<<" "<<hlm[3]<<" "<<endl;
-  //      cout<<sine_parameters_add_h[1][0]<<" "<<sine_parameters_add_h[1][1]<<" "<<sine_parameters_add_h[1][2]<<endl;
-        
-        //cout<<"różnica "<<sine_parameters_add_h[1][0]-sine_parameters[1][0]<<endl;
 
-  //      cout<<"sine_parameters       "<<sine_parameters[0][0]<<" "<<sine_parameters[1][0]<<" "<<sine_parameters[1][1]<<" "<<sine_parameters[1][2]<<endl;
-  //      cout<<"sine_parameters_add_h "<<sine_parameters_add_h[0][0]<<" "<<sine_parameters_add_h[1][0]<<" "<<sine_parameters_add_h[1][1]<<" "<<sine_parameters_add_h[1][2]<<endl;
          ////////////////////////////////////
+        #pragma omp parallel for reduction(+ : chi_p_ad_h) private (ymod_p_ad_h)
         for(int i=0; i<n_datapoints; i++)
         {
             ymod_p_ad_h=sine_parameters_add_h[0][0];
@@ -562,9 +529,23 @@ void fit_sines::Levenberg_Marquardt_fit(const vector<long double> & t, const vec
                 ymod_p_ad_h += sine_parameters_add_h[j][1] * sin(arg_p_ad_h);
                 
             }
-            //cout<<ymod[i]<<" --- "<<ymod_p_ad_h<<"  --- "<<y[i]<<endl;
             chi_p_ad_h += (y[i]-ymod_p_ad_h)*(y[i]-ymod_p_ad_h)*w[i];
         }
+        
+        /*
+        for(int i=0; i<n_datapoints; i++)
+        {
+            ymod_p_ad_h=sine_parameters_add_h[0][0];
+                        
+            for(int j=1; j<=n_sines; j++)
+            {
+                arg_p_ad_h = dwaPI * (sine_parameters_add_h[j][0]*t[i] + sine_parameters_add_h[j][2]);
+                ymod_p_ad_h += sine_parameters_add_h[j][1] * sin(arg_p_ad_h);
+                
+            }
+            chi_p_ad_h += (y[i]-ymod_p_ad_h)*(y[i]-ymod_p_ad_h)*w[i];
+        }
+        */
         
         rho_denominator=0;
         for(std::vector<std::vector<bool> >::size_type i=0; i<fit_control.size(); i++)
@@ -573,7 +554,6 @@ void fit_sines::Levenberg_Marquardt_fit(const vector<long double> & t, const vec
         }
         rho=(chi_p-chi_p_ad_h)/fabs(rho_denominator);
         
-        //cout<<"rho "<<rho<<" "<<chi_p<<" "<<chi_p_ad_h<<endl;
         
         if(rho>eps4)
         {
@@ -587,7 +567,6 @@ void fit_sines::Levenberg_Marquardt_fit(const vector<long double> & t, const vec
             lambda0 = min(lambda0*10, big_number);
             recalculate_eq_coeff=false;
         }
-        //cout<<"lambda0 "<<lambda0<<endl;
         
         //convergence test
         max_grad=max_nu_change=max_par=-1e6;

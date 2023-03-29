@@ -46,6 +46,7 @@ public:
     void prewithen_data();
     
     void print();
+    void remove_close_freq(long double factor, ofstream & out);
 private:
     int count_columns(string file_name);
     int columns;
