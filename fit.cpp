@@ -36,9 +36,6 @@ void fit_sines::lin_fit_A_and_ph(const vector<long double>  & date, const vector
     
     X_row[0]=1;
     
-    time_t start, koniec;
-    time( & start );
-   
     
     //cout<<"**********::**********"<<endl;
     #pragma omp declare reduction (add_m : vector<vector<long double> > : add_matrix(omp_out, omp_in)) initializer(omp_priv = vector<vector<long double> >(omp_orig.size(), vector<long double>(omp_orig.size())) )
@@ -68,18 +65,13 @@ void fit_sines::lin_fit_A_and_ph(const vector<long double>  & date, const vector
         }
     }
   
-    time( & koniec );      
-    cout<<"CZAS policzenia macierzy  "<<difftime( koniec, start )<<endl;
     
-//    time( & start );
+
     for (int j=1; j<parameters; j++)    // Fill in above the diagonal from symmetry.
         for (int k=0; k<j; k++)
             XTWX[k][j]=XTWX[j][k];
         
 
-        
-//    time( & koniec );      
-//    cout<<"CZAS ********  "<<difftime( koniec, start )<<endl;
     
  
    int l1, k1;
@@ -358,7 +350,7 @@ void fit_sines::Levenberg_Marquardt_fit(const vector<long double> & t, const vec
     
     max_iterations=maxiter_multipler*fitted_parameters;
     
-    cout<<"max iter "<<max_iterations<<" "<<maxiter_multipler<<" "<<fitted_parameters<<" "<<eps1<<" "<<eps2<<" "<<eps5<<endl;
+    //cout<<"max iter "<<max_iterations<<" "<<maxiter_multipler<<" "<<fitted_parameters<<" "<<eps1<<" "<<eps2<<" "<<eps5<<endl;
     
     for(iter=0; iter<max_iterations; iter++)
     {
@@ -628,7 +620,7 @@ void fit_sines::Levenberg_Marquardt_fit(const vector<long double> & t, const vec
             break;
         }
     }
-    cout<<"STOP "<<" "<<max_par<<" "<<chi_red<<" "<<max_nu_change<<endl;
+    cout<<"STOP: "<<"relatvie max parameter change: "<<max_par<<" -- relatvie max frequency change: "<<max_nu_change<<"  --- chi_red: "<<chi_red<<endl<<endl;
     if(iter == max_iterations)
         cout<<"ups ---- probably L-M not converged"<<endl;
     

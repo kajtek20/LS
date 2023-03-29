@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
     
     setenv("OMP_NUM_THREADS", iface.cp["threads"].c_str(),1);
     
-    time_t start, koniec, start_f, koniec_f;
+    time_t start_f, koniec_f;
     
     time( & start_f );
     
@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
         }
         
         LS.find_nu_max_amp(stod(iface.cp["StoN_criterion"]), string_to_bool(iface.cp["noise_in_window"]), stod(iface.cp["window_size"]));
-        cout<<"Z LS: nu-> "<<LS.nu_max_amp<<" amp-> "<<LS.amp_max<<" S/N-> "<<LS.SN_nu_max_amp<<" S/Nfull-> "<<LS.SN_nu_max_amp_full<<endl;
+        cout<<"L-S: nu-> "<<LS.nu_max_amp<<" amp-> "<<LS.amp_max<<" S/N-> "<<LS.SN_nu_max_amp<<" S/Nfull-> "<<LS.SN_nu_max_amp_full<<endl;
         
         if(LS.nu_max_amp>0)
         {
@@ -90,17 +90,12 @@ int main(int argc, char* argv[])
             lc.sine_parameters[i][0]=LS.nu_max_amp;
             lc.n_sines=i;
             
-            time( & start );
+            
             fs.lin_fit_A_and_ph(lc.date, lc.flux, lc.weights, lc.n_sines, lc.data_points, lc.sine_parameters);
-            time( & koniec );      
-            cout<<"CZAS lin fit  "<<difftime( koniec, start )<<endl<<endl;
             
-            time( & start );
+            
             fs.Levenberg_Marquardt_fit(lc.date, lc.flux, lc.weights, lc.n_sines, lc.data_points, lc.fit_control, lc.sine_parameters);
-            time( & koniec );      
-            cout<<"CZAS M-L  "<<difftime( koniec, start )<<endl<<endl;
-            cout<<endl<<"Aktualny czas: "<<ctime(&koniec)<<endl;
-            
+             
             lc.prewithen_data();
             
             for(int j=1; j<=i; j++){
@@ -134,7 +129,7 @@ int main(int argc, char* argv[])
     out.close(); out2.close();
     
     time( & koniec_f );
-    cout<<"CZAS full  "<<difftime( koniec_f, start_f )<<endl<<endl;
+    cout<<"Calculation time:  "<<difftime( koniec_f, start_f )<<endl<<endl;
 }
 
 

@@ -123,7 +123,7 @@ void light_curve::read_data(string file_name)
         date[i]-=t0;
     }
 
-    cout<<"flux_mean "<<mean<<" "<<data_points<<"   T0 "<<date[0]<<endl;
+    cout<<"flux_mean "<<mean<<" "<<data_points<<"   T0 "<<date[0]<<endl<<endl;
         
     in.close();
 }
