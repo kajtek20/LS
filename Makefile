@@ -12,7 +12,7 @@ main: main.o fast_LS.o fit.o interface.o
 
 # The main.o target can be written more simply
 
-main.o: main.cpp fast_LS.h fit.h interface.h
+main.o: main.cpp fast_LS.h fit.h interface.h 
 	$(CC) $(CFLAGS) -c main.cpp
 
 fast_LS.o: fast_LS.cpp fast_LS.h
@@ -21,7 +21,7 @@ fast_LS.o: fast_LS.cpp fast_LS.h
 fit.o: fit.cpp fit.h
 	$(CC) $(CFLAGS2) -c fit.cpp
 
-interface.o: interface.cpp interface.h
+interface.o: interface.cpp interface.h 
 	$(CC) $(CFLAGS2) -c interface.cpp
 
 

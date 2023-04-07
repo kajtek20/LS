@@ -71,8 +71,8 @@ int main(int argc, char* argv[])
         }
         
         LS.find_nu_max_amp(stod(iface.cp["StoN_criterion"]), string_to_bool(iface.cp["noise_in_window"]), stod(iface.cp["window_size"]));
-        cout<<"####################################################################"<<endl;
-        cout<<"L-S: nu-> "<<LS.nu_max_amp<<" amp-> "<<LS.amp_max<<" S/N-> "<<LS.SN_nu_max_amp<<" S/Nfull-> "<<LS.SN_nu_max_amp_full<<endl;
+        cout<<"\E[1;34m" <<"####################################################################"<< "\E[0m"<<endl;
+        cout<<"L-S: nu-> " << "\E[1;31m" << LS.nu_max_amp << "\E[0m"<<" amp-> "<<LS.amp_max<<" S/N-> "<<LS.SN_nu_max_amp<<" S/Nfull-> "<<LS.SN_nu_max_amp_full<<endl;
         
         if(LS.nu_max_amp>0)
         {

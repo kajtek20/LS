@@ -49,7 +49,7 @@ threads = 8 // how many cores to use (default 1)
 
 
 // errors calculation
-Czerny_err_corr = false // add frequency error correction by Schwarzenberg-Czerny 1991
+Czerny_err_corr = true // add frequency error correction by Schwarzenberg-Czerny 1991
 
 
 
@@ -64,3 +64,5 @@ com_par_range_v2 = 10 // for overloaded function to search combinations and harm
                    // max absolute value for m and n and o in combinations m * nu_i + n * nu_j o * nu_k are com_par_range-2
 har_range_v2 = 10 // max considered harmonic  for overloaded function to search combinations and harmonics
                   //(version which only mark combinations and harmonics)
+                  
+                  

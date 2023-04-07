@@ -678,7 +678,7 @@ void light_curve::check_har_kom(int i, interface & iface)
             if(fabs( m*sine_parameters[j][0] - sine_parameters[i][0] ) <  Rayleigh_resolution && v_komb[j][0] == 0 )
             {
                 cout<<endl;
-                cout<<"Your frequency can be harmonic: "<<m<<"*nu"<<j<<endl;
+                cout<<"Your frequency can be harmonic: "<<"\E[1;31m"<<m<< "\E[0m"<<"*nu"<<"\E[1;31m"<<j<< "\E[0m"<<endl;
                 cout<<m<<"*nu"<<j<<"-"<<sine_parameters[i][0]<<" = "<<m*sine_parameters[j][0] - sine_parameters[i][0]<<endl;
                 cout<<"Rayleigh res: "<<Rayleigh_resolution<<endl;
                 ask1=true;
@@ -704,7 +704,8 @@ void light_curve::check_har_kom(int i, interface & iface)
                         && v_komb[j][0] == 0  && v_komb[k][0] == 0 )
                     {
                         cout<<endl;
-                        cout<<"Your frequency can be combination: "<<m<<"*nu"<<j<<showpos<<n<<noshowpos<<"*nu"<<k<<endl;
+                        cout<<"Your frequency can be combination: "<<"\E[1;31m"<<m<< "\E[0m"<<"*nu"<<"\E[1;31m"<<j<< "\E[0m"\
+                            <<showpos<<"\E[1;31m"<<n<< "\E[0m"<<noshowpos<<"*nu"<<"\E[1;31m"<<k<< "\E[0m"<<endl;
                         cout<<m<<"*nu"<<j<<showpos<<n<<noshowpos<<"*nu"<<k<<"-"<<sine_parameters[i][0]<<"="\
                             <<m*sine_parameters[j][0]  + n*sine_parameters[k][0] - sine_parameters[i][0]<<endl;
                         cout<<"Rayleigh res: "<<Rayleigh_resolution<<endl;
@@ -736,7 +737,9 @@ void light_curve::check_har_kom(int i, interface & iface)
                             {
                                 cout<<endl;
                                 cout<<"Your frequency can be combination: "\
-                                    <<m<<"*nu"<<j<<showpos<<n<<noshowpos<<"*nu"<<k<<showpos<<o<<noshowpos<<"*nu"<<l<<endl;
+                                    <<"\E[1;31m"<<m<< "\E[0m"<<"*nu"<<"\E[1;31m"<<j<< "\E[0m"<<showpos<<"\E[1;31m"<<n<< "\E[0m"\
+                                    <<noshowpos<<"*nu"<<"\E[1;31m"<<k<< "\E[0m"<<showpos<<"\E[1;31m"<<o<< "\E[0m"\
+                                    <<noshowpos<<"*nu"<<"\E[1;31m"<<l<< "\E[0m"<<endl;
                                 cout<<m<<"*nu"<<j<<showpos<<n<<noshowpos<<"*nu"<<k<<showpos<<o<<noshowpos<<"*nu"<<l\
                                     <<"-"<<sine_parameters[i][0]<<"="\
                                     <<m*sine_parameters[j][0] + n*sine_parameters[k][0] + o*sine_parameters[l][0] - sine_parameters[i][0]<<endl;

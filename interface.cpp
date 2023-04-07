@@ -14,10 +14,10 @@ bool string_to_bool(std::string str) {
 
 interface::interface(int _narguments, char* argv[]): narguments(_narguments)
 {
-    cout<<"#####################################"<<endl;
-    cout<<"LS for Linux, version of Mar 29, 2023"<<endl;
-    cout<<"by Wojtek Szewczuk"<<endl;
-    cout<<"#####################################"<<endl<<endl;
+    cout<< "\E[22;32m"<<"#############################################"<< "\E[0m"<<endl;
+    cout<< "\E[1;32m"<<"LS and fit for Linux, version of Apr 07, 2023"<< "\E[0m"<<endl;
+    cout<< "\E[1;32m"<<"by Wojtek Szewczuk"<< "\E[0m"<<endl;
+    cout<< "\E[22;32m"<<"#############################################"<< "\E[0m"<<endl<<endl;
     
     for(int i=0; i<narguments; i++)
         call_parameters.push_back(argv[i]);
