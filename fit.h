@@ -20,7 +20,10 @@ public:
                           int n_sines, int n_datapoints, vector<vector<long double> > & sine_parameters);
     void Levenberg_Marquardt_fit(const vector<long double> & t, const vector<long double> & y, const vector<long double> & w,\
                                     const int n_sines, const int n_datapoints,\
-                                    const vector<vector<bool> > fit_control, vector<vector<long double> > & sine_parameters);
+                                    const vector<vector<bool> > fit_control, vector<vector<long double> > & sine_parameters,\
+                                    const vector<vector<int> > & v_komb);
+    
+    
     
     //moze warto zrobic konstruktor dla tych parametrow
     //parameters for L-M

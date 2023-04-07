@@ -143,4 +143,16 @@ void interface::make_default_cp()
     cp.insert(std::pair{"remove_too_close", "false"});
     cp.insert(std::pair{"remove_too_close_fac", "2.5"});
     cp.insert(std::pair{"threads", "1"});
+    
+    cp.insert(std::pair{"Czerny_err_corr", "true"});
+    
+    cp.insert(std::pair{"set_exact_com_and_har", "false"});
+    
+    cp.insert(std::pair{"har_range", "10"});
+    cp.insert(std::pair{"com_2par_range", "10"});
+    cp.insert(std::pair{"com_3par_range", "3"});
+    
+    cp.insert(std::pair{"com_par_range_v2", "10"});
+    cp.insert(std::pair{"har_range_v2", "10"});
+    //cp.insert(std::pair{"T0", "1870"}); //no default value -> get floor from the first observation
 }

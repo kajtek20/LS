@@ -3,7 +3,9 @@
 data_file    =   RV_Ari.dat // file with data; first column time, second flux, third flux_error ... It has to contain at lest first two columns
 
 
-
+T0 = 1870 // all points in time are reduced by this value
+          // for numerical reasons should be close to the date of first observations but not exactly
+          // if not given in config, is set to the floor from the first observation
 
 
 //output 
@@ -16,7 +18,7 @@ save_spectra = false  // save spectra to files - true or no false
 //spectra settings
 spec_mode_default = false //calculate with "proper" resolution up to ~Nyquist frequency
 spec_res = 5e-5 // resolution of the calculated spectrum, only relevant if spec_mode_default =false
-spec_high_freq = 200 //maximum frequency, only relevant if spec_mode_default =false
+spec_high_freq = 60 //maximum frequency, only relevant if spec_mode_default =false
 
 
 
@@ -24,13 +26,13 @@ spec_high_freq = 200 //maximum frequency, only relevant if spec_mode_default =fa
 // noise parameters
 noise_in_window = true // if true - noise is calculated within given window, if false noise is calculated from the whole spectrum
 window_size = 1
-StoN_criterion = 7 // only frequency peaks higher than StoN_criterion times noise are accepted
+StoN_criterion = 11.1 // only frequency peaks higher than StoN_criterion times noise are accepted
 
 
 
 //fitting parameters
 fit_all_freq = true // if false only last n values of found  frequencies are fitted (by default 1)
-fit_n_last_freq = 3 // relevant if fit_all_freq = false
+fit_n_last_freq = 1 // relevant if fit_all_freq = false
 
 
 
@@ -43,3 +45,22 @@ remove_too_close_fac =2.5  // if two frequencies are closer than rem_too_close_f
 
 //parallelism 
 threads = 8 // how many cores to use (default 1)
+
+
+
+// errors calculation
+Czerny_err_corr = false // add frequency error correction by Schwarzenberg-Czerny 1991
+
+
+
+// harmonics and combinations
+set_exact_com_and_har = true // if true ask if set exact values of harmonics and combinations and do not fit them
+har_range = 10 // max considered harmonic 
+com_2par_range = 10 //max absolute value for m and n in combinations m * nu_i + n * nu_j
+com_3par_range = 3 //max absolute value for m and n and o in combinations m * nu_i + n * nu_j o * nu_k
+
+com_par_range_v2 = 10 // for overloaded function to search combinations and harmonics  (version which only mark combinations and harmonics)
+                   // max absolute value for m and n in combinations m * nu_i + n * nu_j
+                   // max absolute value for m and n and o in combinations m * nu_i + n * nu_j o * nu_k are com_par_range-2
+har_range_v2 = 10 // max considered harmonic  for overloaded function to search combinations and harmonics
+                  //(version which only mark combinations and harmonics)

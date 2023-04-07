@@ -68,11 +68,13 @@ void light_curve::print()
         cout<<fixed<<setw(20)<<setprecision(6)<<date[i]<<" "<<setw(20)<<setprecision(6)<<flux[i]<<endl;
 }
 
-void light_curve::read_data(string file_name)
+void light_curve::read_data(interface & iface)
 {
     string tmp;
     long double t, f, ferr;
     long double mean=0;
+    string file_name=iface.cp["data_file"];
+    
     ifstream in(file_name);
     if(!in.good())
     {
@@ -114,7 +116,10 @@ void light_curve::read_data(string file_name)
         }
     }
     
-    t0=floor(date[0]);
+    if( iface.cp.find("T0") == iface.cp.end() )
+        t0=floor(date[0]);
+    else
+        t0=stod(iface.cp["T0"]);
     Rayleigh_resolution=1/(date[data_points-1]-date[0]);
     mean/=data_points;
     for(int i=0; i<data_points; i++)
@@ -132,19 +137,50 @@ void light_curve::read_data(string file_name)
 
 void light_curve::remove_close_freq(long double factor, ofstream & out)
 {
+    bool exit_loop=false;
     for(int i=1; i<=n_sines; i++)
     {
         for(int j=i+1; j<=n_sines; j++)
         {
+            exit_loop=false;
             if(fabs(sine_parameters[i][0]-sine_parameters[j][0]) <= factor * Rayleigh_resolution)
             {
+                if(v_komb.size() != 0){
+                for(int k=j+1; k<=n_sines; k++)
+                {
+                    if( (v_komb[k][0] == 1 && v_komb[k][2] == j) ||\
+                        (v_komb[k][0] == 2 && (v_komb[k][2] == j || v_komb[k][4] == j)) ||\
+                        (v_komb[k][0] == 3 && (v_komb[k][2] == j || v_komb[k][4] == j || v_komb[k][6] == j)) )
+                    {
+                        cout<<"I can't remove this close frequency because it creates a harmonic or a combination"<<endl;
+                        exit_loop=true;
+                        continue;
+                    }
+                }
+                }
+                if(exit_loop)
+                    continue;
                 out<<fixed<<setw(4)<<j<<setw(14)<<setprecision(8)<<sine_parameters[j][0]<<setw(12)<<setprecision(8)<<sine_parameters[j][3];
                 out<<setw(12)<<setprecision(4)<<sine_parameters[j][1]<<setw(12)<<setprecision(4)<<sine_parameters[j][4];
                 out<<setw(12)<<setprecision(4)<<sine_parameters[j][2]<<setw(12)<<setprecision(4)<<sine_parameters[j][5];
                 out<<setw(8)<<setprecision(2)<<sine_parameters[j][6]<<setw(8)<<setprecision(2)<<sine_parameters[j][7]<<endl;
             
+                if(v_komb.size() != 0)
+                {
+                    for(int k=j+1; k<=n_sines; k++)
+                    {
+                        if( v_komb[k][0] != 0 && v_komb[k][2] > j ) v_komb[k][2]-=1;
+                        if( (v_komb[k][0] == 2 || v_komb[k][0] == 3) && v_komb[k][4] > j ) v_komb[k][4]-=1;
+                        if( v_komb[k][0] == 3 && v_komb[k][6] > j ) v_komb[k][6]-=1;
+                    }
+                }
+                
                 sine_parameters.erase(sine_parameters.begin()+j);
                 fit_control.erase(fit_control.begin()+j);
+                
+                if(v_komb.size() != 0)
+                    v_komb.erase(v_komb.begin()+j);
+                
                 n_sines--;
                 j--;
             }
@@ -517,4 +553,280 @@ void light_curve::prewithen_data()
     }
     flux_resid[i] = flux[i]-sum;
   }
+}
+
+void light_curve::check_har_kom(interface & iface)
+{
+    //sorting by amplitude
+    vector<int> index(n_sines+1, 0);
+    for(int i = 0; i <= n_sines; i++)
+        index[i] = i;
+    
+    sort(index.begin()+1, index.end(), [&](const int& a, const int& b) { return (sine_parameters[a][0] > sine_parameters[b][0]); } );
+    
+    /*
+     1. szukamy harmonik do zalozonego max,
+     2a. ustawiamy ii=0
+     2. szukamy kombinacji z dwoma rodzicami, ale z mnoznikami max do +-3+-ii
+     3. szukamy kombinacji z trzema rodzicami ale z mnoznikami max do +-1+-ii
+     4. zwiekszamy ii o 1 (do osiągnięcia zalozonego max) o wracamy do punktu 2
+     4a. jesli mamy wiecej mozliwych par wybieramy te, ktore daja wieksza sume kwadratow amplitud (osobno dla p.2 i p. 3)
+     */
+
+    if( v_komb.size() == 0 )
+        v_komb.resize(n_sines+1, vector<int>(7, 0));
+    
+    double sum_sqr_amp, sum_sqr_amp_tmp;
+    
+
+    
+    
+    for(int ii=0; ii <= stoi(iface.cp["com_par_range_v2"])-3; ii++)
+    {
+        for(int i=2; i <= n_sines; i++)
+        {
+            if(v_komb[i][0] == 4) v_komb[i][0]=0;
+            for(int j=1; j<i; j++)
+            {
+                for(int m=2; m <= stoi(iface.cp["har_range_v2"]); m++)
+                {
+                    if(fabs( m*sine_parameters[j][0] - sine_parameters[i][0] ) <  Rayleigh_resolution\
+                       && v_komb[j][0] == 0 && v_komb[i][0] == 0)
+                    {
+                        v_komb[i][0]=-1;
+                        v_komb[i][1]=m;
+                        v_komb[i][2]=j;
+                        
+                    }
+                }
+            }
+    
+            if( v_komb[i][0] != 0 || i==2 ) continue;
+            sum_sqr_amp=-1;
+            for(int j=1; j<i; j++)
+            {
+                for(int k=j+1; k<i; k++)
+                {
+                    for(int m=-3-ii; m<=3+ii; m++)
+                    {
+                        for(int n=-3-ii; n<=3+ii; n++)
+                        {
+                            sum_sqr_amp_tmp=sine_parameters[j][1]*sine_parameters[j][1]+sine_parameters[k][1]*sine_parameters[k][1];
+                            if(fabs( m*sine_parameters[j][0] + n*sine_parameters[k][0] - sine_parameters[i][0] ) <  Rayleigh_resolution \
+                               && v_komb[j][0] == 0  && v_komb[k][0] == 0 && sum_sqr_amp<sum_sqr_amp_tmp )
+                            {
+                                sum_sqr_amp=sum_sqr_amp_tmp;
+                                v_komb[i][0]=-2;
+                                v_komb[i][1]=m;
+                                v_komb[i][2]=j;
+                                v_komb[i][3]=n;
+                                v_komb[i][4]=k;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if( v_komb[i][0] != 0 || i == 2 || i==3 ) continue;
+            sum_sqr_amp=-1;
+            for(int j=1; j<i; j++)
+            {
+                for(int k=j+1; k<i; k++)
+                {
+                    for(int l=k+1; l<i; l++)
+                    {
+                        for(int m=-1-ii; m<=1+ii; m++)
+                        {
+                            for(int n=-1-ii; n<=1+ii; n++)
+                            {
+                                for(int o=-1-ii; o<=1+ii; o++)
+                                {
+                                    sum_sqr_amp_tmp=sine_parameters[j][1]*sine_parameters[j][1]+sine_parameters[k][1]*sine_parameters[k][1]\
+                                                   +sine_parameters[l][1]*sine_parameters[l][1];
+                                    if(fabs( m*sine_parameters[j][0] + n*sine_parameters[k][0] + o*sine_parameters[l][0]\
+                                             - sine_parameters[i][0] ) <  Rayleigh_resolution \
+                                    && v_komb[j][0] == 0  && v_komb[k][0] == 0  && v_komb[l][0] == 0 && sum_sqr_amp<sum_sqr_amp_tmp )
+                                    {
+                                        sum_sqr_amp=sum_sqr_amp_tmp;
+                                        v_komb[i][0]=-3;
+                                        v_komb[i][1]=m;
+                                        v_komb[i][2]=j;
+                                        v_komb[i][3]=n;
+                                        v_komb[i][4]=k;
+                                        v_komb[i][5]=o;
+                                        v_komb[i][6]=l;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void light_curve::check_har_kom(int i, interface & iface)
+{
+    v_komb.resize(i+1, vector<int>(7, 0));
+    bool ask1=false, ask2=false, ask3=false;
+    
+    for(int j=1; j<i; j++)
+    {
+        for(int m=2; m <= stoi(iface.cp["har_range"]); m++)
+        {
+            if(fabs( m*sine_parameters[j][0] - sine_parameters[i][0] ) <  Rayleigh_resolution && v_komb[j][0] == 0 )
+            {
+                cout<<endl;
+                cout<<"Your frequency can be harmonic: "<<m<<"*nu"<<j<<endl;
+                cout<<m<<"*nu"<<j<<"-"<<sine_parameters[i][0]<<" = "<<m*sine_parameters[j][0] - sine_parameters[i][0]<<endl;
+                cout<<"Rayleigh res: "<<Rayleigh_resolution<<endl;
+                ask1=true;
+            }
+        }
+    }
+    
+    for(int j=1; j<i; j++)
+    {
+        for(int k=j+1; k<i; k++)
+        {
+            for(int m=-stoi(iface.cp["com_2par_range"]); m<=stoi(iface.cp["com_2par_range"]); m++)
+            {
+                if(m==0) continue;
+                for(int n=-stoi(iface.cp["com_2par_range"]); n<=stoi(iface.cp["com_2par_range"]); n++)
+                {
+                    if(n==0) continue;
+                    
+//                    cout<<" ++++ "<<m<<" "<<sine_parameters[j][0]<<" "<<n<<" "<<sine_parameters[k][0]<<" "<<sine_parameters[i][0]<<endl;
+  //                  cout<<" ++++ "<<m*sine_parameters[j][0] + n*sine_parameters[k][0] - sine_parameters[i][0]<<endl;
+                    
+                    if(fabs( m*sine_parameters[j][0] + n*sine_parameters[k][0] - sine_parameters[i][0] ) <  Rayleigh_resolution \
+                        && v_komb[j][0] == 0  && v_komb[k][0] == 0 )
+                    {
+                        cout<<endl;
+                        cout<<"Your frequency can be combination: "<<m<<"*nu"<<j<<showpos<<n<<noshowpos<<"*nu"<<k<<endl;
+                        cout<<m<<"*nu"<<j<<showpos<<n<<noshowpos<<"*nu"<<k<<"-"<<sine_parameters[i][0]<<"="\
+                            <<m*sine_parameters[j][0]  + n*sine_parameters[k][0] - sine_parameters[i][0]<<endl;
+                        cout<<"Rayleigh res: "<<Rayleigh_resolution<<endl;
+                        ask2=true;
+                    }
+                }
+            }
+        }
+    }
+    
+    for(int j=1; j<i; j++)
+    {
+        for(int k=j+1; k<i; k++)
+        {
+            for(int l=k+1; l<i; l++)
+            {
+                for(int m=-stoi(iface.cp["com_3par_range"]); m<=stoi(iface.cp["com_3par_range"]); m++)
+                {
+                    if(m==0) continue;
+                    for(int n=-stoi(iface.cp["com_3par_range"]); n<=stoi(iface.cp["com_3par_range"]); n++)
+                    {
+                        if(n==0) continue;
+                        for(int o=-stoi(iface.cp["com_3par_range"]); o<=stoi(iface.cp["com_3par_range"]); o++)
+                        {
+                            if(o==0) continue;
+                            if(fabs( m*sine_parameters[j][0] + n*sine_parameters[k][0] + o*sine_parameters[l][0] - sine_parameters[i][0] )\
+                                     <  Rayleigh_resolution \
+                                     && v_komb[j][0] == 0  && v_komb[k][0] == 0  && v_komb[l][0] == 0 )
+                            {
+                                cout<<endl;
+                                cout<<"Your frequency can be combination: "\
+                                    <<m<<"*nu"<<j<<showpos<<n<<noshowpos<<"*nu"<<k<<showpos<<o<<noshowpos<<"*nu"<<l<<endl;
+                                cout<<m<<"*nu"<<j<<showpos<<n<<noshowpos<<"*nu"<<k<<showpos<<o<<noshowpos<<"*nu"<<l\
+                                    <<"-"<<sine_parameters[i][0]<<"="\
+                                    <<m*sine_parameters[j][0] + n*sine_parameters[k][0] + o*sine_parameters[l][0] - sine_parameters[i][0]<<endl;
+                                cout<<"Rayleigh res: "<<Rayleigh_resolution<<")"<<endl;
+                                ask3=true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    int answer;
+    if(ask1 || ask2 || ask3)
+    {
+        while(true)
+        {
+            cout<<"To confirm:"<<endl;
+            if(ask1)
+                cout<<"harmonic -> enter 1"<<endl;
+            if(ask2)
+                cout<<"combination of 2 frequencies -> enter 2"<<endl;
+            if(ask3)
+                cout<<"combination of 3 frequencies -> enter 3"<<endl;
+            cout<<"leave as independent -> enter 0"<<endl;
+            cin>>answer;
+            if(answer == 0) answer=4; // safety valve so that probable combinations are not parents
+            v_komb[i][0]=answer;
+            if(answer == 1 || answer == 2 || answer == 3)
+                fit_control[i][0]=false;
+            
+            if(answer == 0 || answer == 1 || answer == 2 || answer == 3  || answer == 4)
+                break;
+            else
+                cout<<"bad answer"<<endl;
+                    
+        }
+    }
+    
+    int mm=0, nn=0, oo=0, jj=0, kk=0, ll=0;
+    if(answer == 1)
+    {
+        cout<<"enter m and frequency number ( m * nu j)"<<endl;
+        cin>>mm>>jj;
+        v_komb[i][1]=mm;
+        v_komb[i][2]=jj;
+    }
+    
+    if(answer == 2)
+    {
+        cout<<"enter m, frequency ID, n frequency ID ( m * nu j + n * nu k)"<<endl;
+        cin>>mm>>jj>>nn>>kk;
+        v_komb[i][1]=mm;
+        v_komb[i][2]=jj;
+        v_komb[i][3]=nn;
+        v_komb[i][4]=kk;
+    }
+    
+    if(answer == 3)
+    {
+        cout<<"enter m, frequency ID, n frequency ID, o frequency ID ( m * nu j + n * nu k + o * nu l)"<<endl;
+        cin>>mm>>jj>>nn>>kk>>oo>>ll;
+        v_komb[i][1]=mm;
+        v_komb[i][2]=jj;
+        v_komb[i][3]=nn;
+        v_komb[i][4]=kk;
+        v_komb[i][5]=oo;
+        v_komb[i][6]=ll;
+    }
+}
+
+
+void light_curve::err_corr_Czerny()  //Schwarzenberg-Czerny 1991
+
+{
+    int zmian_znak=0;
+    double D;
+    
+    freq_error_Czerny.resize(sine_parameters.size());
+    prewithen_data();
+    
+    for(std::vector<long double>::size_type i=1; i<flux_resid.size(); i++)
+    {
+        if( (flux_resid[i-1]>=0 && flux_resid[i]<0) || (flux_resid[i-1]<0 && flux_resid[i]>=0) )
+            zmian_znak++;
+    }
+    
+    D=(double)flux_resid.size()/(zmian_znak+1);
+    cout<<"Schwarzenberg-Czerny (1991) err cor  "<<sqrt(D)<<endl;
+    
+    for(std::vector<std::vector<long double> >::size_type i=1; i<sine_parameters.size(); i++)
+        freq_error_Czerny[i]=sine_parameters[i][3]*sqrt(D);    
 }

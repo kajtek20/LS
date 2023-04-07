@@ -16,7 +16,7 @@
 #include <string>
 #include <ctime>
 #include <sstream>
-
+#include "interface.h"
 
 using namespace std;
 
@@ -40,10 +40,30 @@ public:
                                              //sine_parameters[1][4] - amplitude error, sine_parameters[1][5] - phase error, 
                                              //sine_parameters[1][6] - S/N calculated in window sine_parameters[1][7] - S/N calculated from full spectrum
                                              //sine_parameters[2][0] - second frequency etc
+                                             
+    vector<vector<int> > v_komb;  // 1 kolumna 0 -> to czestotliwosc niezalezna, jeśli 1  to harmonika, 2 to kombinacja 2 rodziców, 
+                                  //3 to kombinacja 3 rodziców taka, ze:
+                                  // nu_i = v_komb[i][1] * nu_{v_komb[i][2]} + v_komb[i][3] * nu_{v_komb[i][4]} + v_komb[i][5] * nu_{v_komb[i][6]}
+                                  // indices corresponds to sine_parameters therefore start fill from 1
+                                             
+    vector<long double> freq_error_Czerny; //Schwarzenberg-Czerny 1991
     
-    void read_data(string file_name);
+    void read_data(interface & iface);
     
     void prewithen_data();
+    
+    void err_corr_Czerny();  //Schwarzenberg-Czerny 1991
+    
+    //two overloaded functions to search for harmonics and combinations
+    void check_har_kom(int i,  interface & iface); // check i-th frequency; suggest possible harmonics and combinations; 
+                                                   //user decides; depending on the response, it sets the frequency to be fitted
+                                                   //or set exact combination or harmonic;
+                                                   //parents can be all frequencies found up to i-th frequency
+    void check_har_kom(interface & iface); // check after finding all significant frequencies;
+                                           // only add information about possible frequency;
+                                           // don't check frequencies marked as harmonic or combination for the other version of function
+                                           // as parents are considered only frequencies with higher amplitude than possible combination 
+    
     
     void print();
     void remove_close_freq(long double factor, ofstream & out);

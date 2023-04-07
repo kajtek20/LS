@@ -316,7 +316,8 @@ void fit_sines::make_J_and_ymod(const int n_datapoints, const vector<long double
 
 void fit_sines::Levenberg_Marquardt_fit(const vector<long double> & t, const vector<long double> & y, const vector<long double> & w,\
                                     const int n_sines, const int n_datapoints,\
-                                    const vector<vector<bool> > fit_control, vector<vector<long double> > & sine_parameters)
+                                    const vector<vector<bool> > fit_control, vector<vector<long double> > & sine_parameters,\
+                                    const vector<vector<int> > & v_komb)
 {
     int fitted_parameters=0, iter;
     vector<vector<long double> > J, JTWJ, A, AA, bb;
@@ -365,9 +366,20 @@ void fit_sines::Levenberg_Marquardt_fit(const vector<long double> & t, const vec
                 JTWy[i]=0;
             }
 
-
-            time_t start, koniec;
-            time( & start );
+            
+            if(v_komb.size() != 0)
+            {
+                for(std::vector<std::vector<long double> >::size_type i=1; i<sine_parameters.size(); i++)
+                {
+                    if(v_komb[i][0] == 1)
+                        sine_parameters[i][0] = v_komb[i][1]*sine_parameters[v_komb[i][2]][0];
+                    else if(v_komb[i][0] == 2)
+                        sine_parameters[i][0] = v_komb[i][1]*sine_parameters[v_komb[i][2]][0]+v_komb[i][3]*sine_parameters[v_komb[i][4]][0];
+                    else if(v_komb[i][0] == 3)
+                        sine_parameters[i][0] = v_komb[i][1]*sine_parameters[v_komb[i][2]][0]+v_komb[i][3]*sine_parameters[v_komb[i][4]][0]\
+                                               +v_komb[i][5]*sine_parameters[v_komb[i][6]][0];
+                }
+            }
             
             make_J_and_ymod(n_datapoints, t, n_sines, sine_parameters, fit_control, J, ymod);
             chi_p=0;
@@ -463,11 +475,6 @@ void fit_sines::Levenberg_Marquardt_fit(const vector<long double> & t, const vec
             }
             
             
-  
-             
-            
-            time( & koniec );      
-            //cout<<"CZAS policzenia macierzy  "<<difftime( koniec, start )<<endl;
         
             #pragma omp parallel for 
             for (int j=1;j<fitted_parameters; j++)   //Fill in the symmetric side.
@@ -481,8 +488,6 @@ void fit_sines::Levenberg_Marquardt_fit(const vector<long double> & t, const vec
         for(int i=0; i<fitted_parameters; i++)
             A[i][i] += lambda0 * A[i][i];
         
-
-
         b=JTWy;
         //gauss change A and b
         gauss(fitted_parameters, A, b, hlm);
@@ -506,7 +511,22 @@ void fit_sines::Levenberg_Marquardt_fit(const vector<long double> & t, const vec
                 sine_parameters_add_h[i][1] += hlm[hindex++];
             if(i>0 && fit_control[i][2])
                 sine_parameters_add_h[i][2] += hlm[hindex++];
-
+        }
+        
+        if(v_komb.size() != 0)
+        {
+            for(std::vector<std::vector<long double> >::size_type i=1; i<sine_parameters_add_h.size(); i++)
+            {
+                if(v_komb[i][0] == 1)
+                    sine_parameters_add_h[i][0] = v_komb[i][1]*sine_parameters_add_h[v_komb[i][2]][0];
+                else if(v_komb[i][0] == 2)
+                    sine_parameters_add_h[i][0] = v_komb[i][1]*sine_parameters_add_h[v_komb[i][2]][0]\
+                                                 +v_komb[i][3]*sine_parameters_add_h[v_komb[i][4]][0];
+                else if(v_komb[i][0] == 3)
+                    sine_parameters_add_h[i][0] = v_komb[i][1]*sine_parameters_add_h[v_komb[i][2]][0]\
+                                                 +v_komb[i][3]*sine_parameters_add_h[v_komb[i][4]][0]\
+                                                 +v_komb[i][5]*sine_parameters_add_h[v_komb[i][6]][0];
+            }
         }
 
          ////////////////////////////////////
@@ -685,6 +705,9 @@ void fit_sines::err_Levenberg_Marquardt(const vector<long double> & t, const vec
         }
     }
 }
+
+
+
 
 
 
