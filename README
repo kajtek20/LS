@@ -2,4 +2,8 @@ Compilation -> use make and attached Makefile
 
 
 
+Requirements:
+nfft3 library https://www-user.tu-chemnitz.de/~potts/nfft/
+
+
 
