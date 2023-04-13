@@ -477,7 +477,16 @@ void fast_LS_periodogram::calculate_noise(bool noise_in_window, long double wind
         noise_licznik++;
 		noise_full+=Pn[i];
     }
+    
+    
     noise_full/=noise_licznik;
+    
+    if(!noise_in_window)
+    {
+        for(int i=0; i<nfreqs; i++)
+            Pn_noise[i]=noise_full;
+    }
+    
     if(save_trf_and_noise_files)
     {
         string trf_file_name;
@@ -581,25 +590,25 @@ void light_curve::check_har_kom(interface & iface)
 
     
     
-    for(int ii=0; ii <= stoi(iface.cp["com_par_range_v2"])-3; ii++)
+    for(int i=2; i <= n_sines; i++)
     {
-        for(int i=2; i <= n_sines; i++)
+        
+        if(v_komb[i][0] == 4) v_komb[i][0]=0;
+        for(int j=1; j<i; j++)
         {
-            if(v_komb[i][0] == 4) v_komb[i][0]=0;
-            for(int j=1; j<i; j++)
+            for(int m=2; m <= stoi(iface.cp["har_range_v2"]); m++)
             {
-                for(int m=2; m <= stoi(iface.cp["har_range_v2"]); m++)
+                if(fabs( m*sine_parameters[j][0] - sine_parameters[i][0] ) <  Rayleigh_resolution\
+                    && v_komb[j][0] == 0 && v_komb[i][0] == 0)
                 {
-                    if(fabs( m*sine_parameters[j][0] - sine_parameters[i][0] ) <  Rayleigh_resolution\
-                       && v_komb[j][0] == 0 && v_komb[i][0] == 0)
-                    {
-                        v_komb[i][0]=-1;
-                        v_komb[i][1]=m;
-                        v_komb[i][2]=j;
-                        
-                    }
+                    v_komb[i][0]=-1;
+                    v_komb[i][1]=m;
+                    v_komb[i][2]=j;
                 }
             }
+        }
+        for(int ii=0; ii <= stoi(iface.cp["com_par_range_v2"])-3; ii++)
+        {
     
             if( v_komb[i][0] != 0 || i==2 ) continue;
             sum_sqr_amp=-1;
