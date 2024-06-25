@@ -33,7 +33,7 @@ inline long double sign(long double a, long double b)
 
 inline long double square(long double a)
 {
-  return a * a; 
+  return a * a;
 }
 
 
@@ -52,7 +52,7 @@ int light_curve::count_columns(string file_name)
         cout<<"Problem with "<<file_name<<" file"<<endl;
         exit(-1);
     }
-    
+
     getline(in, line);
     licznikStr.str(line);
     while(licznikStr>>item) col++;
@@ -63,7 +63,7 @@ int light_curve::count_columns(string file_name)
 void light_curve::print()
 {
     cout<<"col "<<columns<<"  "<<data_points<<endl;
-    
+
     for(int i=0; i<data_points; i++)
         cout<<fixed<<setw(20)<<setprecision(6)<<date[i]<<" "<<setw(20)<<setprecision(6)<<flux[i]<<endl;
 }
@@ -74,7 +74,7 @@ void light_curve::read_data(interface & iface)
     long double t, f, ferr;
     long double mean=0;
     string file_name=iface.cp["data_file"];
-    
+
     ifstream in(file_name);
     if(!in.good())
     {
@@ -83,10 +83,10 @@ void light_curve::read_data(interface & iface)
     columns=count_columns(file_name);
     if(columns<2)
         cout<<"Ups! something wrong with file "<<file_name<<endl;
-    
+
     data_points=0;
-    
-    
+
+
     if(columns>0)
     {
         while(true)
@@ -94,7 +94,10 @@ void light_curve::read_data(interface & iface)
             in>>t>>f;
             if(in.eof())
                 break;
-            
+
+
+            //cout<<t<<" "<<f<<endl;
+
             mean+=f;
             if(columns>2)
             {
@@ -107,15 +110,15 @@ void light_curve::read_data(interface & iface)
                 flux_err.push_back(1);
                 weights.push_back(1);
             }
-            
+
             date.push_back(t); flux.push_back(f);
             data_points++;
-            
+
             for(int i=3; i<columns; i++)
                 in>>tmp;
         }
     }
-    
+
     if( iface.cp.find("T0") == iface.cp.end() )
         t0=floor(date[0]);
     else
@@ -129,7 +132,7 @@ void light_curve::read_data(interface & iface)
     }
 
     cout<<"flux_mean "<<mean<<" "<<data_points<<"   T0 "<<date[0]<<endl<<endl;
-        
+
     in.close();
 }
 
@@ -164,7 +167,7 @@ void light_curve::remove_close_freq(long double factor, ofstream & out)
                 out<<setw(12)<<setprecision(4)<<sine_parameters[j][1]<<setw(12)<<setprecision(4)<<sine_parameters[j][4];
                 out<<setw(12)<<setprecision(4)<<sine_parameters[j][2]<<setw(12)<<setprecision(4)<<sine_parameters[j][5];
                 out<<setw(8)<<setprecision(2)<<sine_parameters[j][6]<<setw(8)<<setprecision(2)<<sine_parameters[j][7]<<endl;
-            
+
                 if(v_komb.size() != 0)
                 {
                     for(int k=j+1; k<=n_sines; k++)
@@ -174,13 +177,13 @@ void light_curve::remove_close_freq(long double factor, ofstream & out)
                         if( v_komb[k][0] == 3 && v_komb[k][6] > j ) v_komb[k][6]-=1;
                     }
                 }
-                
+
                 sine_parameters.erase(sine_parameters.begin()+j);
                 fit_control.erase(fit_control.begin()+j);
-                
+
                 if(v_komb.size() != 0)
                     v_komb.erase(v_komb.begin()+j);
-                
+
                 n_sines--;
                 j--;
             }
@@ -244,7 +247,7 @@ void fast_LS_periodogram::nfft ( const vector<long double> & t, const vector<lon
                                  vector< complex<long double> > &d, bool window_spectrum)
 {
     fftw_init_threads();
-    
+
 	d.resize(m+1);
     // Creates NFFT plan for 2*m Fourier coefficients ( positive and negative/ frequencies ) and n data samples .
 	nfft_plan p;
@@ -292,27 +295,27 @@ void fast_LS_periodogram::calculate_LS(const vector<long double> & t, const vect
     // Index of the highest frequency in the positive frequency part of spectrum .
     int m = floor (0.5l * npts * over * hifac );
     long double oversampling = over;
-    
+
     if(spec_mode_default == false)
     {
         df = spec_resol;
         oversampling = 1.0l / ( df * (t[npts - 1] - t[0]));
         m = floor (spec_max_freq /spec_resol );
     }
-	
+
 	// Centers the data.
 	centerData(npts, y);
 	// Reduces the times to [-1/2, 1/2).
     reduce(t, npts, oversampling);
-	
+
 	freqs.resize(m);
     Pn.resize(m);
     nfreqs = m;
-    
+
     // Unnormalised FTs of the data and window .
 	sp.resize(m+1);
     nfft(t_reduced, y_centered, npts , m, sp, false);
-    
+
     if(calculate_nfft_win)
     {
         calculate_nfft_win=false;
@@ -320,7 +323,7 @@ void fast_LS_periodogram::calculate_LS(const vector<long double> & t, const vect
 	    vector<long double> empty_vector;
         nfft (t_reduced, empty_vector , npts , 2 * m, win, true);
     }
-    
+
 
     complex<long double>  z1, z2;
     long double absz2, hc2wt, hs2wt, cwt, swt, den, cterm, sterm;
@@ -346,12 +349,12 @@ void fast_LS_periodogram::calculate_LS(const vector<long double> & t, const vect
         //cout<<j*df<<" "<<freqs [jm1]<<endl;
         Pn[jm1] = sqrt(2*( cterm + sterm) / (npts));
 	}
-	
-	
+
+
 	if(save_trf && output_file_number == 0)
     {
         Pn_window.resize(nfreqs);
-        
+
 //        for (int j = 2; j <= m; j ++)
             for (int j = 1; j <= m; j ++)
         {
@@ -371,22 +374,22 @@ void fast_LS_periodogram::calculate_LS(const vector<long double> & t, const vect
             freqs [jm1] = j * df;
             Pn_window[jm1] = sqrt(2*( cterm + sterm) / (npts));
         }
-        
-        
+
+
         ofstream out;
         out.clear();
         string trf_file_name="spec_win.trf";
         out.open(trf_file_name);
         if(!out.good())
             cout<<"Problem with output file"<<endl;
-        
+
         //for some reasons Pn_window for the first frequency is not well calculated :(
         for(int i=1; i<nfreqs; i++)
-            out<<fixed<<setw(12)<<setprecision(7)<<freqs[i]<<setw(14)<<setprecision(7)<<Pn_window[i]<<'\n';
-        
+            out<<fixed<<setw(12)<<setprecision(7)<<freqs[i]<<" "<<setw(14)<<setprecision(7)<<Pn_window[i]<<'\n';
+
         out.close();
     }
-	
+
 	if(save_trf)
     {
         save_trf_and_noise_files=true; // control for save noise files
@@ -401,10 +404,10 @@ void fast_LS_periodogram::calculate_LS(const vector<long double> & t, const vect
         out.open(trf_file_name);
         if(!out.good())
             cout<<"Problem with output file"<<endl;
-        
+
         for(int i=0; i<nfreqs; i++)
-            out<<fixed<<setw(12)<<setprecision(7)<<freqs[i]<<setw(14)<<setprecision(7)<<Pn[i]<<'\n';
-        
+            out<<fixed<<setw(12)<<setprecision(7)<<freqs[i]<<" "<<setw(14)<<setprecision(7)<<Pn[i]<<'\n';
+
         out.close();
     }
 }
@@ -416,7 +419,7 @@ void fast_LS_periodogram::calculate_noise(bool noise_in_window, long double wind
     int noise_licznik=0;
     Pn_noise.resize(nfreqs);
     if(noise_in_window)
-    {      
+    {
       if(cal_noise_window_points)
       {
           cal_noise_window_points=false; //it is enough calculate only once noise window points
@@ -429,7 +432,7 @@ void fast_LS_periodogram::calculate_noise(bool noise_in_window, long double wind
           }
           noise_window_points_div_2=noise_window_points/2;
       }
-      
+
       long double noise=0, noise_final=0;
       noise_licznik=0;
       for(int i=0; i<nfreqs; i++)
@@ -443,7 +446,7 @@ void fast_LS_periodogram::calculate_noise(bool noise_in_window, long double wind
               noise_final=noise/noise_window_points_div_2;
               noise_licznik=noise_window_points_div_2;
           }
-          else 
+          else
           {
               if(i<noise_window_points_div_2 && i<nfreqs-noise_window_points_div_2)
               {
@@ -455,7 +458,7 @@ void fast_LS_periodogram::calculate_noise(bool noise_in_window, long double wind
               {
                   noise+=Pn[i+noise_window_points_div_2-1];
                   noise-=Pn[i-noise_window_points_div_2];
-                  
+
                   noise_final=noise/noise_licznik;
               }
               else
@@ -466,8 +469,8 @@ void fast_LS_periodogram::calculate_noise(bool noise_in_window, long double wind
               }
           }
           Pn_noise[i]=noise_final;
-          
-          
+
+
       }
     }
     noise_licznik=0;
@@ -477,16 +480,16 @@ void fast_LS_periodogram::calculate_noise(bool noise_in_window, long double wind
         noise_licznik++;
 		noise_full+=Pn[i];
     }
-    
-    
+
+
     noise_full/=noise_licznik;
-    
+
     if(!noise_in_window)
     {
         for(int i=0; i<nfreqs; i++)
             Pn_noise[i]=noise_full;
     }
-    
+
     if(save_trf_and_noise_files)
     {
         string trf_file_name;
@@ -500,34 +503,171 @@ void fast_LS_periodogram::calculate_noise(bool noise_in_window, long double wind
         out.open(trf_file_name);
         if(!out.good())
             cout<<"Problem with output file"<<endl;
-        
+
         for(int i=0; i<nfreqs; i++)
-            out<<fixed<<setw(12)<<setprecision(7)<<freqs[i]<<setw(14)<<setprecision(7)<<Pn_noise[i]<<'\n';
-        
+            out<<fixed<<setw(12)<<setprecision(7)<<freqs[i]<<" "<<setw(14)<<setprecision(7)<<Pn_noise[i]<<'\n';
+
         out.close();
     }
 }
 
 
 
-void fast_LS_periodogram::find_nu_max_amp(long double StoNlimit, bool noise_in_window, long double window_size)
+void fast_LS_periodogram::find_nu_max_amp(long double StoNlimit, bool noise_in_window, long double window_size, int n_highest_peaks)
 {
-    nu_max_amp=SN_nu_max_amp=amp_max=-1;
-    
+    nu_max_amp.resize(n_highest_peaks);
+    SN_nu_max_amp.resize(n_highest_peaks);
+    amp_max.resize(n_highest_peaks);
+    SN_nu_max_amp_full.resize(n_highest_peaks);
+    index_nu_max_amp.resize(n_highest_peaks);
+
+    fill(nu_max_amp.begin(), nu_max_amp.end(), -1);
+    fill(amp_max.begin(), amp_max.end(), -1);
+    fill(index_nu_max_amp.begin(), index_nu_max_amp.end(), -1);
+
     calculate_noise(noise_in_window, window_size);
-    for(int i=0; i<nfreqs; i++)
+
+    for(int n=0; n<n_highest_peaks; n++)
     {
-        if( Pn[i] > amp_max && Pn[i] >= StoNlimit*Pn_noise[i] )
+        if(Pn_mask.size() == 0)
         {
-            amp_max=Pn[i];
-            nu_max_amp=freqs[i];
-            SN_nu_max_amp=Pn[i]/Pn_noise[i];
-            SN_nu_max_amp_full=Pn[i]/noise_full;
+            for(int i=1; i<nfreqs-1; i++)
+            {
+                if( Pn[i] > Pn[i-1] && Pn[i] > Pn[i+1] && Pn[i] > amp_max[n] && Pn[i] >= StoNlimit*Pn_noise[i] && n==0)
+                {
+                    amp_max[n]=Pn[i];
+                    nu_max_amp[n]=freqs[i];
+                    SN_nu_max_amp[n]=Pn[i]/Pn_noise[i];
+                    SN_nu_max_amp_full[n]=Pn[i]/noise_full;
+                    index_nu_max_amp[n]=i;
+                }
+                else if( Pn[i] > Pn[i-1] && Pn[i] > Pn[i+1] && Pn[i] > amp_max[n] && Pn[i] >= StoNlimit*Pn_noise[i] && Pn[i]<amp_max[n-1])
+                {
+                    amp_max[n]=Pn[i];
+                    nu_max_amp[n]=freqs[i];
+                    SN_nu_max_amp[n]=Pn[i]/Pn_noise[i];
+                    SN_nu_max_amp_full[n]=Pn[i]/noise_full;
+                    index_nu_max_amp[n]=i;
+                    //if(amp_max[n]<amp_max[n-1]) cout<<"----- "<<nu_max_amp[n]<<" "<<amp_max[n]<<" "<<amp_max[n-1]<<endl;
+                }
+            }
+        }
+        else
+        {
+            for(int i=1; i<nfreqs-1; i++)
+            {
+                if( Pn[i] > Pn[i-1] && Pn[i] > Pn[i+1] && Pn[i] > amp_max[n] && Pn[i] >= StoNlimit*Pn_noise[i] && n==0 && Pn_mask[i] == true)
+                {
+                    amp_max[n]=Pn[i];
+                    nu_max_amp[n]=freqs[i];
+                    SN_nu_max_amp[n]=Pn[i]/Pn_noise[i];
+                    SN_nu_max_amp_full[n]=Pn[i]/noise_full;
+                    index_nu_max_amp[n]=i;
+                }
+                else if( Pn[i] > Pn[i-1] && Pn[i] > Pn[i+1] && Pn[i] > amp_max[n] && Pn[i] >= StoNlimit*Pn_noise[i] && Pn[i]<amp_max[n-1] && Pn_mask[i] == true)
+                {
+                    amp_max[n]=Pn[i];
+                    nu_max_amp[n]=freqs[i];
+                    SN_nu_max_amp[n]=Pn[i]/Pn_noise[i];
+                    SN_nu_max_amp_full[n]=Pn[i]/noise_full;
+                    index_nu_max_amp[n]=i;
+                }
+            }
         }
     }
 }
 
 
+void fast_LS_periodogram::fill_nu_user_max_amp(long double user_frequecy, int accept_sol)
+{
+    int index_max=-1;
+    fill(nu_max_amp.begin(), nu_max_amp.end(), -1);
+    fill(amp_max.begin(), amp_max.end(), -1);
+    fill(index_nu_max_amp.begin(), index_nu_max_amp.end(), -1);
+
+    nu_max_amp[accept_sol-1]=user_frequecy;
+
+    for(int i=0; i<nfreqs-1; i++)
+    {
+        if(freqs[i] <= nu_max_amp[accept_sol-1] && freqs[i+1] > nu_max_amp[accept_sol-1])
+        {
+            fabs(nu_max_amp[accept_sol-1]-freqs[i]) < fabs(nu_max_amp[accept_sol-1]-freqs[i+1]) ? index_max=i : index_max=i+1;
+            amp_max[accept_sol-1]=Pn[index_max];
+            SN_nu_max_amp[accept_sol-1]=Pn[index_max]/Pn_noise[index_max];
+            SN_nu_max_amp_full[accept_sol-1]=Pn[index_max]/noise_full;
+            index_nu_max_amp[accept_sol-1]=index_max;
+            break;
+        }
+    }
+}
+
+
+void fast_LS_periodogram::set_Pn_mask(int n_period, int index_nu_max_amp_scalar, double nu_max_amp_scalar, double Rayleigh_resolution, double factor)
+{
+    if(n_period == 1)
+    {
+        Pn_mask.resize(Pn.size(), true);
+    }
+
+    for(int j=index_nu_max_amp_scalar; j>=0; j--)
+    {
+         if( freqs[j]>=nu_max_amp_scalar-factor*Rayleigh_resolution )
+             Pn_mask[j]=false;
+         else
+             break;
+    }
+    for(vector<char>::size_type j=index_nu_max_amp_scalar; j<Pn_mask.size(); j++)
+    {
+        if( freqs[j]<=nu_max_amp_scalar+factor*Rayleigh_resolution )
+            Pn_mask[j]=false;
+        else
+            break;
+    }
+   // cout<<"Pn mask finish"<<endl;
+
+}
+
+/*
+
+void fast_LS_periodogram::find_nu_max_amp(int n_period, double Rayleigh_resolution, double factor, long double StoNlimit, bool noise_in_window, long double window_size, int n_highest_peaks)
+{
+    int index_nu_max_amp=-1;
+    nu_max_amp=SN_nu_max_amp=amp_max=-1;
+
+    if(n_period == 1)
+        Pn_mask.resize(Pn.size(), 1);
+
+    calculate_noise(noise_in_window, window_size);
+    for(int i=0; i<nfreqs; i++)
+    {
+        if( Pn[i] > amp_max && Pn[i] >= StoNlimit*Pn_noise[i] && Pn_mask[i] == 1)
+        {
+            amp_max=Pn[i];
+            nu_max_amp=freqs[i];
+            SN_nu_max_amp=Pn[i]/Pn_noise[i];
+            SN_nu_max_amp_full=Pn[i]/noise_full;
+            index_nu_max_amp=i;
+        }
+    }
+    if( index_nu_max_amp>0 )
+    {
+        for(int j=index_nu_max_amp; ; j--)
+        {
+            if( freqs[j]>=nu_max_amp-factor*Rayleigh_resolution )
+                Pn_mask[j]=0;
+            else
+                break;
+        }
+        for(int j=index_nu_max_amp; ; j++)
+        {
+            if( freqs[j]<=nu_max_amp+factor*Rayleigh_resolution )
+                Pn_mask[j]=0;
+            else
+                break;
+        }
+    }
+}
+*/
 
 fast_LS_periodogram::fast_LS_periodogram()
 {
@@ -551,7 +691,7 @@ void light_curve::prewithen_data()
   long double arg, sum;
   long double dwapi=2*M_PI;
   flux_resid.resize(data_points);
-  
+
   for(int i=0; i<data_points; i++)
   {
     sum=sine_parameters[0][0];
@@ -570,9 +710,9 @@ void light_curve::check_har_kom(interface & iface)
     vector<int> index(n_sines+1, 0);
     for(int i = 0; i <= n_sines; i++)
         index[i] = i;
-    
+
     sort(index.begin()+1, index.end(), [&](const int& a, const int& b) { return (sine_parameters[a][0] > sine_parameters[b][0]); } );
-    
+
     /*
      1. szukamy harmonik do zalozonego max,
      2a. ustawiamy ii=0
@@ -584,15 +724,15 @@ void light_curve::check_har_kom(interface & iface)
 
     if( v_komb.size() == 0 )
         v_komb.resize(n_sines+1, vector<int>(7, 0));
-    
-    double sum_sqr_amp, sum_sqr_amp_tmp;
-    
 
-    
-    
+    double sum_sqr_amp, sum_sqr_amp_tmp;
+
+
+
+
     for(int i=2; i <= n_sines; i++)
     {
-        
+
         if(v_komb[i][0] == 4) v_komb[i][0]=0;
         for(int j=1; j<i; j++)
         {
@@ -609,7 +749,7 @@ void light_curve::check_har_kom(interface & iface)
         }
         for(int ii=0; ii <= stoi(iface.cp["com_par_range_v2"])-3; ii++)
         {
-    
+
             if( v_komb[i][0] != 0 || i==2 ) continue;
             sum_sqr_amp=-1;
             for(int j=1; j<i; j++)
@@ -635,9 +775,11 @@ void light_curve::check_har_kom(interface & iface)
                     }
                 }
             }
-            
+
             if( v_komb[i][0] != 0 || i == 2 || i==3 ) continue;
             sum_sqr_amp=-1;
+            if(string_to_bool(iface.cp["allow_3_parents_v2"]))
+            {
             for(int j=1; j<i; j++)
             {
                 for(int k=j+1; k<i; k++)
@@ -671,6 +813,7 @@ void light_curve::check_har_kom(interface & iface)
                     }
                 }
             }
+            }
         }
     }
 }
@@ -679,7 +822,7 @@ void light_curve::check_har_kom(int i, interface & iface)
 {
     v_komb.resize(i+1, vector<int>(7, 0));
     bool ask1=false, ask2=false, ask3=false;
-    
+
     for(int j=1; j<i; j++)
     {
         for(int m=2; m <= stoi(iface.cp["har_range"]); m++)
@@ -694,7 +837,7 @@ void light_curve::check_har_kom(int i, interface & iface)
             }
         }
     }
-    
+
     for(int j=1; j<i; j++)
     {
         for(int k=j+1; k<i; k++)
@@ -705,10 +848,10 @@ void light_curve::check_har_kom(int i, interface & iface)
                 for(int n=-stoi(iface.cp["com_2par_range"]); n<=stoi(iface.cp["com_2par_range"]); n++)
                 {
                     if(n==0) continue;
-                    
+
 //                    cout<<" ++++ "<<m<<" "<<sine_parameters[j][0]<<" "<<n<<" "<<sine_parameters[k][0]<<" "<<sine_parameters[i][0]<<endl;
   //                  cout<<" ++++ "<<m*sine_parameters[j][0] + n*sine_parameters[k][0] - sine_parameters[i][0]<<endl;
-                    
+
                     if(fabs( m*sine_parameters[j][0] + n*sine_parameters[k][0] - sine_parameters[i][0] ) <  Rayleigh_resolution \
                         && v_komb[j][0] == 0  && v_komb[k][0] == 0 )
                     {
@@ -724,7 +867,7 @@ void light_curve::check_har_kom(int i, interface & iface)
             }
         }
     }
-    
+
     for(int j=1; j<i; j++)
     {
         for(int k=j+1; k<i; k++)
@@ -779,15 +922,15 @@ void light_curve::check_har_kom(int i, interface & iface)
             v_komb[i][0]=answer;
             if(answer == 1 || answer == 2 || answer == 3)
                 fit_control[i][0]=false;
-            
+
             if(answer == 0 || answer == 1 || answer == 2 || answer == 3  || answer == 4)
                 break;
             else
                 cout<<"bad answer"<<endl;
-                    
+
         }
     }
-    
+
     int mm=0, nn=0, oo=0, jj=0, kk=0, ll=0;
     if(answer == 1)
     {
@@ -796,7 +939,7 @@ void light_curve::check_har_kom(int i, interface & iface)
         v_komb[i][1]=mm;
         v_komb[i][2]=jj;
     }
-    
+
     if(answer == 2)
     {
         cout<<"enter m, frequency ID, n frequency ID ( m * nu j + n * nu k)"<<endl;
@@ -806,7 +949,7 @@ void light_curve::check_har_kom(int i, interface & iface)
         v_komb[i][3]=nn;
         v_komb[i][4]=kk;
     }
-    
+
     if(answer == 3)
     {
         cout<<"enter m, frequency ID, n frequency ID, o frequency ID ( m * nu j + n * nu k + o * nu l)"<<endl;
@@ -826,19 +969,19 @@ void light_curve::err_corr_Czerny()  //Schwarzenberg-Czerny 1991
 {
     int zmian_znak=0;
     double D;
-    
+
     freq_error_Czerny.resize(sine_parameters.size());
     prewithen_data();
-    
+
     for(std::vector<long double>::size_type i=1; i<flux_resid.size(); i++)
     {
         if( (flux_resid[i-1]>=0 && flux_resid[i]<0) || (flux_resid[i-1]<0 && flux_resid[i]>=0) )
             zmian_znak++;
     }
-    
+
     D=(double)flux_resid.size()/(zmian_znak+1);
     cout<<"Schwarzenberg-Czerny (1991) err cor  "<<sqrt(D)<<endl;
-    
+
     for(std::vector<std::vector<long double> >::size_type i=1; i<sine_parameters.size(); i++)
-        freq_error_Czerny[i]=sine_parameters[i][3]*sqrt(D);    
+        freq_error_Czerny[i]=sine_parameters[i][3]*sqrt(D);
 }

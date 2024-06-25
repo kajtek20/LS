@@ -560,7 +560,7 @@ void fit_sines::Levenberg_Marquardt_fit(const vector<long double> & t, const vec
         */
         
         rho_denominator=0;
-        for(std::vector<std::vector<bool> >::size_type i=0; i<fit_control.size(); i++)
+        for(int i=0; i<fitted_parameters; i++)
         {
             rho_denominator+=hlm[i] * (lambda0*JTWJ[i][i]*hlm[i] + JTWy[i]);
         }

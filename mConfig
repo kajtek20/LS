@@ -8,7 +8,7 @@ T0 = 1870 // all points in time are reduced by this value
           // if not given in config, is set to the floor from the first observation
 
 
-//output 
+//output
 freq_file = freq11.dat // output file with found frequencies, amplitudes etc.
 save_spectra = false  // save spectra to files - true or no false
 
@@ -39,11 +39,12 @@ fit_n_last_freq = 1 // relevant if fit_all_freq = false
 
 //remove spurious frequencies
 remove_too_close = true  // true or false
+remove_too_close_hard = false // if true exclude the range from /nu_m - remove_too_close_fac * Rayleigh resolution to /nu_m + remove_too_close_fac * Rayleigh resolution in the periodogram around each found m frequencies  when searching for new frequencies
 remove_too_close_fac =2.5  // if two frequencies are closer than rem_too_close_fac times Rayleigh resolution (and rem_too_close=true), the one with smaller amplitude is removed
 
 
 
-//parallelism 
+//parallelism
 threads = 8 // how many cores to use (default 1)
 
 
@@ -55,14 +56,22 @@ Czerny_err_corr = true // add frequency error correction by Schwarzenberg-Czerny
 
 // harmonics and combinations
 set_exact_com_and_har = true // if true ask if set exact values of harmonics and combinations and do not fit them
-har_range = 10 // max considered harmonic 
+har_range = 10 // max considered harmonic
 com_2par_range = 10 //max absolute value for m and n in combinations m * nu_i + n * nu_j
 com_3par_range = 3 //max absolute value for m and n and o in combinations m * nu_i + n * nu_j o * nu_k
 
+
+
+allow_3_parents_v2=true // allow or not three parents in looking for combinations (only for marking combinations)
 com_par_range_v2 = 10 // for overloaded function to search combinations and harmonics  (version which only mark combinations and harmonics)
                    // max absolute value for m and n in combinations m * nu_i + n * nu_j
                    // max absolute value for m and n and o in combinations m * nu_i + n * nu_j o * nu_k are com_par_range-2
 har_range_v2 = 10 // max considered harmonic  for overloaded function to search combinations and harmonics
                   //(version which only mark combinations and harmonics)
-                  
-                  
+
+
+
+
+// alternative solutions
+try_n_highest_peaks = 5 // display n highest peaks, user chooses which one include to solution
+set_try_n_highest_peaks_eq_1_after_found_n_freq = 20 //set try_n_highest_peaks equal to 1 after preweithen on n frequency

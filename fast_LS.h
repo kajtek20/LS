@@ -85,8 +85,11 @@ public:
     This function returns the results in a structure , LS ( see text ).    */
     void calculate_LS(const vector<long double> & t, const vector<long double> & y, const int npts , const long double over=4 , const long double hifac=1,\
                       bool save_trf=true, const bool spec_mode_default=true, const long double spec_max_freq=25, const long double spec_resol=1e-4);
-    void find_nu_max_amp(long double StoNlimit=4, bool noise_in_window=true, long double window_size=1);
+    void find_nu_max_amp(long double StoNlimit, bool noise_in_window=true, long double window_size=1, int n_highest_peaks=1);
+    //void find_nu_max_amp(int n_period,  double Rayleigh_resolution, double factor, long double StoNlimit, bool noise_in_window=true, long double window_size=1, int n_highest_peaks=1);
+    void set_Pn_mask(int n_period, int index_nu_max_amp_scalar, double nu_max_amp_scalar, double Rayleigh_resolution, double factor);
     fast_LS_periodogram();
+    void fill_nu_user_max_amp(long double user_frequecy, int accept_sol);
     
     vector<long double>  freqs; // (>0) frequencies
     vector<long double> Pn;  // periodogram ordinates (amplitude periodogram)
@@ -95,7 +98,9 @@ public:
     long double noise_full;
     int nfreqs ; // number of frequencies
     long double var, mean;
-    long double nu_max_amp, SN_nu_max_amp, SN_nu_max_amp_full, amp_max;
+    vector<long double> nu_max_amp, SN_nu_max_amp, SN_nu_max_amp_full, amp_max;
+    vector<int> index_nu_max_amp;
+
     
 private:
     void meanAndVariance(const int npts, const vector<long double> &y);
@@ -106,6 +111,8 @@ private:
     
     vector<long double> y_centered, t_reduced;
     vector< complex<long double> > sp, win;
+    vector<bool> Pn_mask;
+
     int output_file_number=0;
     int noise_window_points_div_2;
     bool calculate_nfft_win=true;
